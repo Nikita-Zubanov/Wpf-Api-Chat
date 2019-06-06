@@ -55,7 +55,21 @@ namespace Wpf
 
         private void MessageButton_Click(object sender, RoutedEventArgs e)
         {
-            
+            connect = Connection.GetConnection();
+            List<string> authors = new List<string>();
+            List<string> messages = new List<string>();
+
+            if (connect.IsConnected)
+            {
+                CRUD.Create("api/chat", "{\"Author\":\"" + connect.UserName + "\",\"Message\":\"" + TextBox.Text + "\"}");
+
+                messages = GetListValuesFromJson(CRUD.Read("api/chat").Result, "message");
+                authors = GetListValuesFromJson(CRUD.Read("api/chat").Result, "author");
+            }
+
+            ChatBox.Items.Clear();
+            for (int i = 0; i < authors.Count; i++)
+                ChatBox.Items.Add(authors[i] + ": " + messages[i]);
         }
 
         private List<string> GetListValuesFromJson(string jsonLine, string attribute)
