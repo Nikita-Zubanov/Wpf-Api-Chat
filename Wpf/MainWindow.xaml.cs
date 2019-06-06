@@ -24,5 +24,15 @@ namespace Wpf
         {
             InitializeComponent();
         }
+
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MessageButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
