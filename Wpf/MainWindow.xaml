@@ -8,11 +8,11 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <ListBox x:Name="ChatBox" HorizontalAlignment="Left" Height="334" Margin="10,10,0,0" VerticalAlignment="Top" Width="610"/>
-        <TextBox x:Name="TextBox" HorizontalAlignment="Left" Height="60" Margin="10,349,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="692"/>
+        <TextBox x:Name="TextBox" HorizontalAlignment="Left" Height="60" Margin="10,349,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="610"/>
         <ListBox x:Name="UsersBox" HorizontalAlignment="Left" Height="281" Margin="625,63,0,0" VerticalAlignment="Top" Width="157"/>
         <Button x:Name="LoginButton" Content="Button" HorizontalAlignment="Left" Margin="707,38,0,0" VerticalAlignment="Top" Width="75" Click="LoginButton_Click"/>
         <TextBox x:Name="UserBox" HorizontalAlignment="Left" Height="23" Margin="625,10,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="157"/>
-        <Button x:Name="MessageButton" Content="Отправить" HorizontalAlignment="Left" Margin="707,349,0,0" VerticalAlignment="Top" Width="75" Click="MessageButton_Click"/>
+        <Button x:Name="MessageButton" Content="Отправить" HorizontalAlignment="Left" Margin="625,349,0,0" VerticalAlignment="Top" Width="75" Click="MessageButton_Click"/>
 
     </Grid>
 </Window>
