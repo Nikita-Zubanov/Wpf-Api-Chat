@@ -7,7 +7,7 @@ namespace WebApi.Models
 {
     public class ChatContext : IDatastackContext<Chat>
     {
-        private static ChatContext Chatstack;
+        private static ChatContext Chatstack;       // Не нужно
         private List<Chat> Chat;
 
         private ChatContext()
@@ -15,7 +15,7 @@ namespace WebApi.Models
             Chat = new List<Chat>();
         }
 
-        public static ChatContext GetChatStack()
+        public static ChatContext GetChatStack()    // Не нужно
         {
             if (Chatstack == null)
                 Chatstack = new ChatContext();

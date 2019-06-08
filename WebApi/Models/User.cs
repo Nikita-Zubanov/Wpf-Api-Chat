@@ -7,7 +7,7 @@ namespace WebApi.Models
 {
     public class User
     {
-        public int Id { get; set; }
+        public int Id { get; set; }         //использовать GUID
         public string Name { get; set; }
 
         private static int id;

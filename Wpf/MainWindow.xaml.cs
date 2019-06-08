@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,14 +29,14 @@ namespace Wpf
 
         private Connection connect;
 
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            connect = Connection.GetConnection();
+            connect = Connection.GetConnection();            
             List<string> users = new List<string>();
 
             if (connect.IsConnected)
             {
-                CRUD.Delete("api/users", connect.UserName);
+                await ApiManager.Delete("api/users", connect.UserName);
                 connect.Disconnecting();
 
                 UsersBox.Items.Clear();
@@ -44,16 +45,18 @@ namespace Wpf
             else
             {
                 connect.Connecting(UserBox.Text);
-                CRUD.Create("api/users", "{\"Name\":\"" + connect.UserName + "\"}");
+                await ApiManager.Create("api/users", "{\"Name\":\"" + connect.UserName + "\"}");
 
-                users = GetListValuesFromJson(CRUD.Read("api/users").Result, "name");
+                var a = ApiManager.Read("api/users");
+
+                users = GetListValuesFromJson(await a, "name");
             }
 
             foreach (string user in users)
                 UsersBox.Items.Add(user);
         }
 
-        private void MessageButton_Click(object sender, RoutedEventArgs e)
+        private async void MessageButton_Click(object sender, RoutedEventArgs e)
         {
             connect = Connection.GetConnection();
             List<string> authors = new List<string>();
@@ -61,10 +64,10 @@ namespace Wpf
 
             if (connect.IsConnected)
             {
-                CRUD.Create("api/chat", "{\"Author\":\"" + connect.UserName + "\",\"Message\":\"" + TextBox.Text + "\"}");
+                await ApiManager.Create("api/chat", "{\"Author\":\"" + connect.UserName + "\",\"Message\":\"" + TextBox.Text + "\"}"); // переделать {0}
 
-                messages = GetListValuesFromJson(CRUD.Read("api/chat").Result, "message");
-                authors = GetListValuesFromJson(CRUD.Read("api/chat").Result, "author");
+                messages = GetListValuesFromJson(await ApiManager.Read("api/chat"), "message");
+                authors = GetListValuesFromJson(await ApiManager.Read("api/chat"), "author");
             }
 
             ChatBox.Items.Clear();
