@@ -23,6 +23,27 @@ namespace WebApi.Models
             return Chatstack;
         }
 
+        public void AddMessage(Chat obj)
+        {
+            Chat.Add(obj);
+        }
+
+        public List<Chat> GetCurrentChat(string name)
+        {
+            List<Chat> currentChat = new List<Chat>();
+            for(int i = 0; i< Chat.Count; i++)
+                if (Chat[i].Name == name)
+                    currentChat.Add(Chat[i]);
+
+            return currentChat;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+
         public List<Chat> Get()
         {
             return Chat;

@@ -19,17 +19,35 @@ namespace WebApi.Controllers
             Chatstack = ChatContext.GetChatStack();
         }
 
+        [HttpPost("{message}")]
+        public void AddMessage([FromBody] Chat value)
+        {
+            Chatstack.AddMessage(value);
+        }
+
+        [HttpGet("{Name}")]
+        public ActionResult<IEnumerable<Chat>> GetCurrentChat(string name)
+        {
+            return Chatstack.GetCurrentChat(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+
+
         [HttpGet]
         public ActionResult<IEnumerable<Chat>> Get()
         {
             return Chatstack.Get();
         }
 
-        [HttpGet("{author}")]
-        public ActionResult<Chat> Get(string author)
-        {
-            return Chatstack.Get(author);
-        }
+        //[HttpGet("{author}")]
+        //public ActionResult<Chat> Get(string author)
+        //{
+        //    return Chatstack.Get(author);
+        //}
 
         [HttpPost]
         public void Post([FromBody] Chat value)

@@ -31,13 +31,12 @@ namespace Wpf
         {
             User.Name = UserNameBox.Text;
             User.Password = UserPasswordBox.Text;
-            User.Status = "Online";
 
             if (User.Name != string.Empty && User.Password != string.Empty)
             {
                 MainWindow mainWindow = new MainWindow();
 
-                ApiManager.Create("api/authorization", $"{{'Name':'{User.Name}', 'Password':'{User.Password}', 'Status':'{User.Status}'}}");
+                ApiManager.Create("api/authorization", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
 
                 Close();
                 mainWindow.ShowDialog();

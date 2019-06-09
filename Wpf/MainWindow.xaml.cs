@@ -25,15 +25,15 @@ namespace Wpf
         public MainWindow()
         {
             InitializeComponent();
-            
+
             Thread secondThread = new Thread(SecondThread);
             secondThread.Start();
         }
 
         public static void MessageButton_Click(object sender, EventArgs e)
         {
-            if (CreatingChatWindow.TextBox.Text != string.Empty)
-                ApiManager.Create("api/chat", $"{{\"Author\":\"{User.Name}\",\"Message\":\"{CreatingChatWindow.TextBox.Text}\"}}");
+            if (ChatWindow.TextBox[ChatSelected].Text != string.Empty)
+                ApiManager.Create("api/chat/message", $"{{\"Name\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Message\":\"{ChatWindow.TextBox[ChatSelected].Text}\"}}");
         }
 
         private void SecondThread()
@@ -46,33 +46,36 @@ namespace Wpf
 
         private async void UpdateListBoxes()
         {
-            List<string> users = new List<string>();
-            List<string> authors = new List<string>();
-            List<string> messages = new List<string>();
+            if (ChatsControl.HasItems)
+            {
 
-            string usersJson = await ApiManager.Read("api/users");
-            string chatJson = await ApiManager.Read("api/chat");
+                List<string> users = new List<string>();
+                List<string> authors = new List<string>();
+                List<string> messages = new List<string>();
 
-            users = GetListValuesFromJson(usersJson, "name");
-            authors = GetListValuesFromJson(chatJson, "author");
-            messages = GetListValuesFromJson(chatJson, "message");
+                string usersJson = await ApiManager.Read("api/users");
+                string chatJson = await ApiManager.Read($"api/chat/{ChatSelected}");
 
-            UsersBox.Items.Clear();
-            foreach (string user in users)
-                UsersBox.Items.Add(user);
+                users = GetListValuesFromJson(usersJson, "name");
+                authors = GetListValuesFromJson(chatJson, "author");
+                messages = GetListValuesFromJson(chatJson, "message");
 
-            ChatBox.Items.Clear();
-            for (int i = 0; i < authors.Count; i++)
-                if (authors[i] != string.Empty && messages[i] != string.Empty)
-                    ChatBox.Items.Add(authors[i] + ": " + messages[i]);
+                ChatWindow.UsersBox[ChatSelected].Items.Clear();
+                foreach (string user in users)
+                    ChatWindow.UsersBox[ChatSelected].Items.Add(user);
+
+                ChatWindow.ChatBox[ChatSelected].Items.Clear();
+                for (int i = 0; i < authors.Count; i++)
+                    if (authors[i] != string.Empty && messages[i] != string.Empty)
+                        ChatWindow.ChatBox[ChatSelected].Items.Add(authors[i] + ": " + messages[i]);
+            }
         }
 
         private void ExitUserItem_Click(object sender, RoutedEventArgs e)
         {
             AuthorizationWindow authorizationWindow = new AuthorizationWindow();
-            User.Status = "Offline";
 
-            ApiManager.Change($"api/authorization/{User.Name}", $"{{'Name':'{User.Name}', 'Password':'{User.Password}', 'Status':'{User.Status}'}}");
+            ApiManager.Change($"api/authorization/{User.Name}", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
 
             Close();
             authorizationWindow.Show();
@@ -80,12 +83,12 @@ namespace Wpf
 
         private void CreateChatItem_Click(object sender, RoutedEventArgs e)
         {
-            CreatingChatWindow creatingWindow = new CreatingChatWindow(ChatsControl);
+            ChatWindow creatingWindow = new ChatWindow(ChatsControl);
 
             creatingWindow.Show();
         }
 
-        private string ChatSelected;
+        private static string ChatSelected;
         private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;

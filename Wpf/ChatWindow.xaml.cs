@@ -17,15 +17,15 @@ namespace Wpf
     /// <summary>
     /// Логика взаимодействия для CreatingChatWindow.xaml
     /// </summary>
-    public partial class CreatingChatWindow : Window
+    public partial class ChatWindow : Window
     {
-        public static TabControl ChatControl;
-        public static Button MessageButton;
-        public static ListBox ChatBox;
-        public static TextBox TextBox;
-        public static ListBox UsersBox;
+        private TabControl ChatControl;
+        public static Dictionary<string, Button> MessageButton = new Dictionary<string, Button>();
+        public static Dictionary<string, ListBox> ChatBox = new Dictionary<string, ListBox>();
+        public static Dictionary<string, TextBox> TextBox = new Dictionary<string, TextBox>();
+        public static Dictionary<string, ListBox> UsersBox = new Dictionary<string, ListBox>();
 
-        public CreatingChatWindow(TabControl chatControl)
+        public ChatWindow(TabControl chatControl)
         {
             InitializeComponent();
 
@@ -39,6 +39,7 @@ namespace Wpf
             if (chatName != string.Empty)
             {
                 ChatControl.Items.Add(CreateTabItem(chatName));
+                ChatControl.SelectedIndex = ChatControl.Items.Count - 1;
 
                 ApiManager.Create("api/chats", $"{{'Name':'{chatName}', 'Creator':'{User.Name}'}}");
 
@@ -50,49 +51,49 @@ namespace Wpf
 
         private TabItem CreateTabItem(string tabName)
         {
-            ChatBox = new ListBox
+            ChatBox.Add(tabName, new ListBox
             {
-                Name = "ChatBox",
+                Name = tabName,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Height = 272,
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 617
-            };
-            TextBox = new TextBox
+            });
+            TextBox.Add(tabName, new TextBox
             {
-                Name = "TextBox",
+                Name = tabName,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Height = 64,
                 Margin = new Thickness(0, 277, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 617
-            };
-            UsersBox = new ListBox
+            });
+            UsersBox.Add(tabName, new ListBox
             {
-                Name = "UsersBox",
+                Name = tabName,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Height = 272,
                 Margin = new Thickness(622, 0, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 144
-            };
-            MessageButton = new Button {
-                Name = "MessageButton",
+            });
+            MessageButton.Add(tabName, new Button {
+                Name = tabName,
                 Content = "Отправить",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(622, 277, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 75
-            };
-            MessageButton.Click += MainWindow.MessageButton_Click;
+            });
+            MessageButton[tabName].Click += MainWindow.MessageButton_Click;
 
             Grid chatGrid = new Grid();
             chatGrid.Name = "ChatGrid";
             chatGrid.Background = Brushes.WhiteSmoke;
-            chatGrid.Children.Add(ChatBox);
-            chatGrid.Children.Add(TextBox);
-            chatGrid.Children.Add(UsersBox);
-            chatGrid.Children.Add(MessageButton);
+            chatGrid.Children.Add(ChatBox[tabName]);
+            chatGrid.Children.Add(TextBox[tabName]);
+            chatGrid.Children.Add(UsersBox[tabName]);
+            chatGrid.Children.Add(MessageButton[tabName]);
 
             TabItem item = new TabItem();
             item.Name = tabName;

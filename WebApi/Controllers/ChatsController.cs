@@ -20,9 +20,15 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public void Post([FromBody] Chats chat)
+        public void Create([FromBody] Chats chat)
         {
-            Chatsstack.Post(chat);
+            Chatsstack.Create(chat);
+        }
+
+        [HttpGet]
+        public ActionResult<IEnumerable<Chats>> Get()
+        {
+            return Chatsstack.Get();
         }
     }
 }

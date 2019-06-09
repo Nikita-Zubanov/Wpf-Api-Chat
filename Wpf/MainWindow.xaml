@@ -7,15 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <TabControl x:Name="ChatsControl" HorizontalAlignment="Left" Height="369" Margin="10,40,0,0" VerticalAlignment="Top" Width="772" SelectionChanged="ChatsControl_SelectionChanged">
-            <TabItem x:Name="ChatItem" Header="ChatItem" Margin="-2,-2,2,0">
-                <Grid x:Name="ChatGrid" Background="#FFF5F5F5">
-                    <ListBox x:Name="ChatBox" HorizontalAlignment="Left" Height="272" VerticalAlignment="Top" Width="617"/>
-                    <TextBox x:Name="TextBox" HorizontalAlignment="Left" Height="64" Margin="0,277,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="617"/>
-                    <ListBox x:Name="UsersBox" HorizontalAlignment="Left" Height="272" Margin="622,0,0,0" VerticalAlignment="Top" Width="144"/>
-                </Grid>
-            </TabItem>
-        </TabControl>
+        <TabControl x:Name="ChatsControl" HorizontalAlignment="Left" Height="369" Margin="10,40,0,0" VerticalAlignment="Top" Width="772" SelectionChanged="ChatsControl_SelectionChanged"/>
         <Menu x:Name="Menu" HorizontalAlignment="Left" Height="25" Margin="10,10,0,0" VerticalAlignment="Top" Width="772">
             <MenuItem x:Name="UserItem" Header="Пользователь" Height="25" Width="100">
                 <MenuItem x:Name="ExitUserItem" Header="Выйти из аккаунта" Click="ExitUserItem_Click"/>

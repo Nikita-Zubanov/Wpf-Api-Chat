@@ -23,9 +23,18 @@ namespace WebApi.Models
             return Chatsstack;
         }
 
-        public void Post(Chats obj)
+        public void Create(Chats obj)
         {
+            obj.AutoIncrement();
             Chats.Add(obj);
+        }
+
+        /*
+         *  Postman
+         */
+        public List<Chats> Get() 
+        {
+            return Chats;
         }
     }
 }

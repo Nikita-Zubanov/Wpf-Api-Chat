@@ -1,11 +1,11 @@
-﻿<Window x:Class="Wpf.CreatingChatWindow"
+﻿<Window x:Class="Wpf.ChatWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wpf"
         mc:Ignorable="d"
-        Title="CreatingChatWindow" Height="450" Width="800">
+        Title="ChatWindow" Height="450" Width="800">
     <Grid>
         <TextBox x:Name="ChatNameBox" HorizontalAlignment="Left" Height="23" Margin="93,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <Label x:Name="ChatNameLable" Content="Название:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="23" Width="78"/>
