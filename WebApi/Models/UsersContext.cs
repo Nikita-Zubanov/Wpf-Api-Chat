@@ -48,6 +48,13 @@ namespace WebApi.Models
 
             Users[index] = obj;
         }
+        public void Put(string name, User obj)
+        {
+            var user = Users.Find(u => u.Name == name);
+            var index = Users.IndexOf(user);
+
+            Users[index] = obj;
+        }
 
         public void Delete(string value)
         {
@@ -57,7 +64,7 @@ namespace WebApi.Models
         }
 
         public User Get(string value) => null;
-        public void Put(string value, User obj) { }
+        
         public void Delete(int id) { }
     }
 }

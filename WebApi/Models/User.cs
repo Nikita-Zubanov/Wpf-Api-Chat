@@ -9,6 +9,8 @@ namespace WebApi.Models
     {
         public int Id { get; set; }         //использовать GUID
         public string Name { get; set; }
+        public string Password { get; set; }
+        public string Status { get; set; }
 
         private static int id;
         public void AutoIncrement()

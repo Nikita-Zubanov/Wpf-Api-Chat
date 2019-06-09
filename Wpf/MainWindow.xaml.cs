@@ -25,54 +25,70 @@ namespace Wpf
         public MainWindow()
         {
             InitializeComponent();
+            
+            Thread secondThread = new Thread(SecondThread);
+            secondThread.Start();
         }
 
-        private Connection connect;
-
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
+        public static void MessageButton_Click(object sender, EventArgs e)
         {
-            connect = Connection.GetConnection();            
+            if (CreatingChatWindow.TextBox.Text != string.Empty)
+                ApiManager.Create("api/chat", $"{{\"Author\":\"{User.Name}\",\"Message\":\"{CreatingChatWindow.TextBox.Text}\"}}");
+        }
+
+        private void SecondThread()
+        {
+            Dispatcher.BeginInvoke((Action)(() => UpdateListBoxes()));
+
+            Thread.Sleep(500);
+            SecondThread();
+        }
+
+        private async void UpdateListBoxes()
+        {
             List<string> users = new List<string>();
-
-            if (connect.IsConnected)
-            {
-                await ApiManager.Delete("api/users", connect.UserName);
-                connect.Disconnecting();
-
-                UsersBox.Items.Clear();
-                ChatBox.Items.Clear();
-            }
-            else
-            {
-                connect.Connecting(UserBox.Text);
-                await ApiManager.Create("api/users", "{\"Name\":\"" + connect.UserName + "\"}");
-
-                var a = ApiManager.Read("api/users");
-
-                users = GetListValuesFromJson(await a, "name");
-            }
-
-            foreach (string user in users)
-                UsersBox.Items.Add(user);
-        }
-
-        private async void MessageButton_Click(object sender, RoutedEventArgs e)
-        {
-            connect = Connection.GetConnection();
             List<string> authors = new List<string>();
             List<string> messages = new List<string>();
 
-            if (connect.IsConnected)
-            {
-                await ApiManager.Create("api/chat", "{\"Author\":\"" + connect.UserName + "\",\"Message\":\"" + TextBox.Text + "\"}"); // переделать {0}
+            string usersJson = await ApiManager.Read("api/users");
+            string chatJson = await ApiManager.Read("api/chat");
 
-                messages = GetListValuesFromJson(await ApiManager.Read("api/chat"), "message");
-                authors = GetListValuesFromJson(await ApiManager.Read("api/chat"), "author");
-            }
+            users = GetListValuesFromJson(usersJson, "name");
+            authors = GetListValuesFromJson(chatJson, "author");
+            messages = GetListValuesFromJson(chatJson, "message");
+
+            UsersBox.Items.Clear();
+            foreach (string user in users)
+                UsersBox.Items.Add(user);
 
             ChatBox.Items.Clear();
             for (int i = 0; i < authors.Count; i++)
-                ChatBox.Items.Add(authors[i] + ": " + messages[i]);
+                if (authors[i] != string.Empty && messages[i] != string.Empty)
+                    ChatBox.Items.Add(authors[i] + ": " + messages[i]);
+        }
+
+        private void ExitUserItem_Click(object sender, RoutedEventArgs e)
+        {
+            AuthorizationWindow authorizationWindow = new AuthorizationWindow();
+            User.Status = "Offline";
+
+            ApiManager.Change($"api/authorization/{User.Name}", $"{{'Name':'{User.Name}', 'Password':'{User.Password}', 'Status':'{User.Status}'}}");
+
+            Close();
+            authorizationWindow.Show();
+        }
+
+        private void CreateChatItem_Click(object sender, RoutedEventArgs e)
+        {
+            CreatingChatWindow creatingWindow = new CreatingChatWindow(ChatsControl);
+
+            creatingWindow.Show();
+        }
+
+        private string ChatSelected;
+        private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
         }
 
         private List<string> GetListValuesFromJson(string jsonLine, string attribute)

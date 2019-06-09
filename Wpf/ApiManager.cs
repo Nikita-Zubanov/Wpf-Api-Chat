@@ -15,8 +15,8 @@ namespace Wpf
         {
             using (HttpClient client = new HttpClient())
             {
-                var content = new StringContent(value.ToString(), Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(url + uri, content);
+                var content = new StringContent(value, Encoding.UTF8, "application/json");
+                await client.PostAsync(url + uri, content);
             }
         }
 
@@ -29,12 +29,21 @@ namespace Wpf
             }
         }
 
+        public static async Task Change(string uri, string value)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                var content = new StringContent(value, Encoding.UTF8, "application/json");
+                await client.PutAsync(url + uri, content);
+            }
+        }
+
         public static async Task Delete(string uri, string value)
         {
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = new Uri(url);
-                var response = await client.DeleteAsync(uri + "/" + value);
+                await client.DeleteAsync(uri + "/" + value);
             }
         }
     }
