@@ -25,10 +25,24 @@ namespace WebApi.Controllers
             Chatstack.AddMessage(value);
         }
 
-        [HttpGet("{Name}")]
-        public ActionResult<IEnumerable<Chat>> GetCurrentChat(string name)
+        [Route("user")]
+        [HttpPost]
+        public void AddUser([FromBody] UsersInChats value)
         {
-            return Chatstack.GetCurrentChat(name);
+            Chatstack.AddUser(value);
+        }
+
+        [HttpGet("{Name}")]
+        public ActionResult<IEnumerable<Chat>> GetChat(string name)
+        {
+            return Chatstack.GetChat(name);
+        }
+
+        //[Route("users")]
+        [HttpGet("users/{Name}")]
+        public ActionResult<IEnumerable<UsersInChats>> GetUsers(string name)
+        {
+            return Chatstack.GetUsers(name);
         }
 
         /// <summary>

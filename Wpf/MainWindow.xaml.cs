@@ -53,10 +53,10 @@ namespace Wpf
                 List<string> authors = new List<string>();
                 List<string> messages = new List<string>();
 
-                string usersJson = await ApiManager.Read("api/users");
+                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
                 string chatJson = await ApiManager.Read($"api/chat/{ChatSelected}");
 
-                users = GetListValuesFromJson(usersJson, "name");
+                users = GetListValuesFromJson(usersJson, "nameUser");
                 authors = GetListValuesFromJson(chatJson, "author");
                 messages = GetListValuesFromJson(chatJson, "message");
 
@@ -94,31 +94,33 @@ namespace Wpf
             ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
         }
 
-        private List<string> GetListValuesFromJson(string jsonLine, string attribute)
+        private List<string> GetListValuesFromJson(string json, string attribute)
         {
-            string[] lines = Regex.Split(jsonLine, "},{");
             List<string> values = new List<string>();
 
-            foreach (string line in lines)
-            {
-                values.Add(GetValueByAttribute(line, attribute));
-            }
+            json = json.Trim(new char[] { '[', ']' });
+            string[] jsonLines = Regex.Split(json, "},{");
+
+            foreach (string jsonLine in jsonLines)
+                values.Add(GetValueByAttribute(jsonLine, attribute));
 
             return values;
         }
-        private string GetValueByAttribute(string line, string attribute)
+        private string GetValueByAttribute(string jsonLine, string attribute)
         {
-            string[] words = Regex.Split(line, "\"");
+            List<string> words = new List<string>();
             string value = "";
 
-            for (int i = 0; i < words.Length; i++)
-            {
-                if (words[i] == attribute)
-                {
-                    i += 2;
-                    value = words[i];
-                }
-            }
+            jsonLine = jsonLine.Trim(new char[] { '{', '}' });
+            string[] symbolWords = Regex.Split(jsonLine, "\"");
+
+            for (int i = 0; i < symbolWords.Length; i++)
+                if (symbolWords[i] != ":" && symbolWords[i] != ":null," && symbolWords[i] != "," && symbolWords[i] != "")
+                    words.Add(symbolWords[i]);
+
+            for (int i = 0; i < words.Count; i++)
+                if (words[i] == attribute && words[i + 1] != "message" && words[i + 1] != "userNames")
+                    value = words[++i];
 
             return value;
         }

@@ -9,10 +9,12 @@ namespace WebApi.Models
     {
         private static ChatContext Chatstack;       // Не нужно
         private List<Chat> Chat;
+        private List<UsersInChats> UsersInChats;
 
         private ChatContext()
         {
             Chat = new List<Chat>();
+            UsersInChats = new List<UsersInChats>();
         }
 
         public static ChatContext GetChatStack()    // Не нужно
@@ -28,7 +30,12 @@ namespace WebApi.Models
             Chat.Add(obj);
         }
 
-        public List<Chat> GetCurrentChat(string name)
+        public void AddUser(UsersInChats obj)
+        {
+            UsersInChats.Add(obj);
+        }
+
+        public List<Chat> GetChat(string name)
         {
             List<Chat> currentChat = new List<Chat>();
             for(int i = 0; i< Chat.Count; i++)
@@ -36,6 +43,16 @@ namespace WebApi.Models
                     currentChat.Add(Chat[i]);
 
             return currentChat;
+        }
+
+        public List<UsersInChats> GetUsers(string name)
+        {
+            List<UsersInChats> users = new List<UsersInChats>();
+            for (int i = 0; i < UsersInChats.Count; i++)
+                if (UsersInChats[i].NameChat == name)
+                    users.Add(UsersInChats[i]);
+
+            return users;
         }
 
 
