@@ -12,23 +12,42 @@ namespace WebApi.Controllers
     [ApiController]
     public class AuthorizationController : ControllerBase
     {
-        private readonly UsersContext Userstack;
+        private static readonly UsersContext UsersContext = new UsersContext();
 
-        public AuthorizationController()
+        [Route("register")]
+        [HttpPost]
+        public void Register([FromBody] User user)
         {
-            Userstack = UsersContext.GetUsersStack();
+            UsersContext.Register(user, "Online");
         }
 
-        [HttpPost]
+        [Route("login")]
+        [HttpPut]
         public void Login([FromBody] User user)
         {
-            Userstack.Post(user);
+            UsersContext.LoginOrLogout(user, "Online");
         }
 
-        [HttpPut("{Name}")]
-        public void Logout(string name, [FromBody] User user)
+        [Route("logout")]
+        [HttpPut]
+        public void Logout([FromBody] User user)
         {
-            Userstack.Put(name, user);
+            UsersContext.LoginOrLogout(user, "Offline");
+        }
+        
+        [HttpGet("{Name}/{Password}")]
+        public ActionResult<bool> IsRegistred(string name, string password)
+        {
+            return UsersContext.IsRegistred(name, password);
+        }
+
+        /*
+         *  Для Postman'а
+         */
+        [HttpGet]
+        public ActionResult<IEnumerable<User>> Get()
+        {
+            return UsersContext.Get();
         }
     }
 }

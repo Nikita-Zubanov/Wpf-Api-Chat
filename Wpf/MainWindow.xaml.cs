@@ -34,13 +34,15 @@ namespace Wpf
         {
             if (ChatWindow.TextBox[ChatSelected].Text != string.Empty)
                 ApiManager.Create("api/chat/message", $"{{\"Name\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Message\":\"{ChatWindow.TextBox[ChatSelected].Text}\"}}");
+
+            ChatWindow.TextBox[ChatSelected].Clear();
         }
 
         private void SecondThread()
         {
             Dispatcher.BeginInvoke((Action)(() => UpdateListBoxes()));
 
-            Thread.Sleep(500);
+            Thread.Sleep(300);
             SecondThread();
         }
 
@@ -48,7 +50,6 @@ namespace Wpf
         {
             if (ChatsControl.HasItems)
             {
-
                 List<string> users = new List<string>();
                 List<string> authors = new List<string>();
                 List<string> messages = new List<string>();
@@ -56,18 +57,18 @@ namespace Wpf
                 string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
                 string chatJson = await ApiManager.Read($"api/chat/{ChatSelected}");
 
-                users = GetListValuesFromJson(usersJson, "nameUser");
+                users = GetListValuesFromJson(usersJson, "userName");
                 authors = GetListValuesFromJson(chatJson, "author");
                 messages = GetListValuesFromJson(chatJson, "message");
-
-                ChatWindow.UsersBox[ChatSelected].Items.Clear();
-                foreach (string user in users)
-                    ChatWindow.UsersBox[ChatSelected].Items.Add(user);
-
+                
                 ChatWindow.ChatBox[ChatSelected].Items.Clear();
                 for (int i = 0; i < authors.Count; i++)
                     if (authors[i] != string.Empty && messages[i] != string.Empty)
                         ChatWindow.ChatBox[ChatSelected].Items.Add(authors[i] + ": " + messages[i]);
+
+                ChatWindow.UsersBox[ChatSelected].Items.Clear();
+                foreach (string user in users)
+                    ChatWindow.UsersBox[ChatSelected].Items.Add(user);
             }
         }
 
@@ -75,7 +76,7 @@ namespace Wpf
         {
             AuthorizationWindow authorizationWindow = new AuthorizationWindow();
 
-            ApiManager.Change($"api/authorization/{User.Name}", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
+            ApiManager.Change($"api/authorization/logout", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
 
             Close();
             authorizationWindow.Show();

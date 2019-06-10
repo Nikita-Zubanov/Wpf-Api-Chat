@@ -11,7 +11,8 @@
         <Label x:Name="UserNameLable" Content="Имя:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="23" Width="78"/>
         <TextBox x:Name="UserPasswordBox" HorizontalAlignment="Left" Height="23" Margin="93,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <Label x:Name="UserPasswordLable" Content="Пароль:" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" Height="23" Width="78"/>
-        <Button x:Name="AuthorizeButton" Content="Войти" HorizontalAlignment="Left" Margin="13,66,0,0" VerticalAlignment="Top" Width="75" Click="AuthorizeButton_Click"/>
+        <Button x:Name="AuthorizeButton" Content="Войти" HorizontalAlignment="Left" Margin="13,80,0,0" VerticalAlignment="Top" Width="75" Click="AuthorizeButton_Click"/>
+        <Button x:Name="RegisterButton" Content="Зарегестрироваться" HorizontalAlignment="Left" Margin="93,80,0,0" VerticalAlignment="Top" Width="120" Click="RegisterButton_Click"/>
 
     </Grid>
 </Window>

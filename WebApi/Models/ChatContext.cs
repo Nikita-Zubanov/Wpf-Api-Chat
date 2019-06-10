@@ -5,39 +5,26 @@ using System.Threading.Tasks;
 
 namespace WebApi.Models
 {
-    public class ChatContext : IDatastackContext<Chat>
+    public class ChatContext
     {
-        private static ChatContext Chatstack;       // Не нужно
-        private List<Chat> Chat;
-        private List<UsersInChats> UsersInChats;
+        private static List<Chat> Chat = new List<Chat>();
+        private static List<UsersInChats> UsersInChats = new List<UsersInChats>();
 
-        private ChatContext()
+        public void AddMessage(Chat chat)
         {
-            Chat = new List<Chat>();
-            UsersInChats = new List<UsersInChats>();
+            if (IsUserInChat(chat))
+                Chat.Add(chat);
         }
 
-        public static ChatContext GetChatStack()    // Не нужно
+        public void AddUser(UsersInChats userInChat)
         {
-            if (Chatstack == null)
-                Chatstack = new ChatContext();
-
-            return Chatstack;
-        }
-
-        public void AddMessage(Chat obj)
-        {
-            Chat.Add(obj);
-        }
-
-        public void AddUser(UsersInChats obj)
-        {
-            UsersInChats.Add(obj);
+            UsersInChats.Add(userInChat);
         }
 
         public List<Chat> GetChat(string name)
         {
             List<Chat> currentChat = new List<Chat>();
+
             for(int i = 0; i< Chat.Count; i++)
                 if (Chat[i].Name == name)
                     currentChat.Add(Chat[i]);
@@ -47,55 +34,33 @@ namespace WebApi.Models
 
         public List<UsersInChats> GetUsers(string name)
         {
-            List<UsersInChats> users = new List<UsersInChats>();
-            for (int i = 0; i < UsersInChats.Count; i++)
-                if (UsersInChats[i].NameChat == name)
-                    users.Add(UsersInChats[i]);
+            //List<UsersInChats> users = new List<UsersInChats>();
+
+            //for (int i = 0; i < UsersInChats.Count; i++)
+            //    if (UsersInChats[i].ChatName == name)
+            //        users.Add(UsersInChats[i]);
+
+            List<UsersInChats> users = UsersInChats.FindAll(u => u.ChatName == name);
+            //var index = Users.IndexOf(userByName);
 
             return users;
         }
 
+        private bool IsUserInChat(Chat chat)
+        {
+            UsersInChats userInChat = UsersInChats.Find(uic => (uic.ChatName == chat.Name) && (uic.UserName == chat.Author));
+            if (userInChat == null)
+                return false;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
+            return true;
+        }
 
+        /*
+         *  Для Postman'а
+         */
         public List<Chat> Get()
         {
             return Chat;
         }
-
-        public Chat Get(string author)
-        {
-            var message = Chat.Find(u => u.Author == author);
-
-            return message;
-        }
-
-        public void Post(Chat obj)
-        {
-            Chat.Add(obj);
-        }
-
-        public void Put(string author, Chat obj)
-        {
-            var message = Chat.Find(u => u.Author == author);
-            var index = Chat.IndexOf(message);
-
-            Chat[index] = obj;
-        }
-
-        public void Delete(string author)
-        {
-            var message = Chat.Find(u => u.Author == author);
-
-            Chat.Remove(message);
-        }
-
-
-        public Chat Get(int id) => null;
-        public void Put(int id, Chat obj) { }
-        public void Delete(int id) { }
     }
 }

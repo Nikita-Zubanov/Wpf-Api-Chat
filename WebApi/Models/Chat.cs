@@ -10,6 +10,5 @@ namespace WebApi.Models
         public string Name { get; set; }
         public string Author { get; set; }
         public string Message { get; set; }
-        public string UserNames { get; set; }
     }
 }

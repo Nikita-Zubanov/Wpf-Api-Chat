@@ -12,73 +12,41 @@ namespace WebApi.Controllers
     [ApiController]
     public class ChatController : ControllerBase
     {
-        private readonly ChatContext Chatstack;
+        private static readonly ChatContext ChatContext = new ChatContext();
 
-        public ChatController()
-        {
-            Chatstack = ChatContext.GetChatStack();
-        }
-
-        [HttpPost("{message}")]
+        [Route("message")]
+        [HttpPost]
         public void AddMessage([FromBody] Chat value)
         {
-            Chatstack.AddMessage(value);
+            ChatContext.AddMessage(value);
         }
 
         [Route("user")]
         [HttpPost]
         public void AddUser([FromBody] UsersInChats value)
         {
-            Chatstack.AddUser(value);
+            ChatContext.AddUser(value);
         }
 
         [HttpGet("{Name}")]
         public ActionResult<IEnumerable<Chat>> GetChat(string name)
         {
-            return Chatstack.GetChat(name);
+            return ChatContext.GetChat(name);
         }
-
-        //[Route("users")]
+        
         [HttpGet("users/{Name}")]
         public ActionResult<IEnumerable<UsersInChats>> GetUsers(string name)
         {
-            return Chatstack.GetUsers(name);
+            return ChatContext.GetUsers(name);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-
-
+        /*
+         *  Для Postman'а
+         */
         [HttpGet]
         public ActionResult<IEnumerable<Chat>> Get()
         {
-            return Chatstack.Get();
-        }
-
-        //[HttpGet("{author}")]
-        //public ActionResult<Chat> Get(string author)
-        //{
-        //    return Chatstack.Get(author);
-        //}
-
-        [HttpPost]
-        public void Post([FromBody] Chat value)
-        {
-            Chatstack.Post(value);
-        }
-
-        [HttpPut("{author}")]
-        public void Put(string author, [FromBody] Chat value)
-        {
-            Chatstack.Put(author, value);
-        }
-
-        [HttpDelete("{author}")]
-        public void Delete(string author)
-        {
-            Chatstack.Delete(author);
+            return ChatContext.Get();
         }
     }
 }

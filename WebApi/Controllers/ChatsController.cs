@@ -12,23 +12,21 @@ namespace WebApi.Controllers
     [ApiController]
     public class ChatsController : ControllerBase
     {
-        private readonly ChatsContext Chatsstack;
-
-        public ChatsController()
-        {
-            Chatsstack = ChatsContext.GetChatsStack();
-        }
+        private static readonly ChatsContext ChatsContext = new ChatsContext();
 
         [HttpPost]
         public void Create([FromBody] Chats chat)
         {
-            Chatsstack.Create(chat);
+            ChatsContext.Create(chat);
         }
 
+        /*
+         *  Для Postman'а
+         */
         [HttpGet]
         public ActionResult<IEnumerable<Chats>> Get()
         {
-            return Chatsstack.Get();
+            return ChatsContext.Get();
         }
     }
 }

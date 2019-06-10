@@ -7,7 +7,7 @@ namespace WebApi.Models
 {
     public class UsersInChats
     {
-        public string NameChat { get; set; }
-        public string NameUser  { get; set; }
+        public string ChatName { get; set; }
+        public string UserName  { get; set; }
     }
 }

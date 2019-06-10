@@ -7,21 +7,7 @@ namespace WebApi.Models
 {
     public class ChatsContext
     {
-        private static ChatsContext Chatsstack;       // Не нужно
-        private List<Chats> Chats;
-
-        private ChatsContext()
-        {
-            Chats = new List<Chats>();
-        }
-
-        public static ChatsContext GetChatsStack()    // Не нужно
-        {
-            if (Chatsstack == null)
-                Chatsstack = new ChatsContext();
-
-            return Chatsstack;
-        }
+        private static List<Chats> Chats = new List<Chats>();
 
         public void Create(Chats obj)
         {
@@ -30,7 +16,7 @@ namespace WebApi.Models
         }
 
         /*
-         *  Postman
+         *  Для Postman'а
          */
         public List<Chats> Get() 
         {
