@@ -45,7 +45,6 @@ namespace Wpf
             Thread.Sleep(300);
             SecondThread();
         }
-
         private async void UpdateListBoxes()
         {
             if (ChatsControl.HasItems)
@@ -93,6 +92,50 @@ namespace Wpf
         private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
+        }
+
+        private void ConsoleBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                MessageBox.Show(ConsoleBox.Text);
+
+                ConsoleBox.Clear();
+            }
+        }
+
+        private void ExpanderConsoleBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            #region
+            ExpanderConsoleBox.ToolTip = @"
+                Комнаты:
+                  •//room create { Название комнаты } — создает комнаты
+                     -c закрытая комната. Только(владелец, модератор и админ) сможет добавлять/ удалять пользоватей из комнаты
+                  •//room remove { Название комнаты } — удаляет комнату (владелец и админ)
+                  •//room rename { Название комнаты } — переименование комнаты (владелец и админ)
+                  •//room connect { Название комнаты } — войти в комнату
+                     -l { login пользователя } — добавить пользователя в комнату
+                  •//room disconnect — выйти из текущей комнаты
+                  •//room disconnect { Название комнаты } — выйти из заданной комнаты
+                     -l { login пользователя } — выгоняет пользователя из комнаты(для владельца, модератора и админа)
+                     -m { Колличество минут } — время на которое пользователь не сможет войти(для владельца, модератора и админа)
+            Пользователи:
+                  •//user rename { login пользователя } (владелец и админ)
+                  •//user ban
+                    -l { login пользователя } — выгоняет пользователя из всех комнат
+                    -m { Колличество минут } — время на которое пользователь не сможет войти
+                  •//user moderator { login пользователя } — действия над модераторами
+                    -n — назначить пользователя модератором
+                    -d — разжаловать пользователя
+            Боты:
+                  •//yBot find -k -l { название канала }||{ название видео } - в ответ бот присылает ссылку на ролик
+                    -v — выводит колличество текущих просмотров
+                    -l — выводит колличество лаqков под видео
+                  •//yBot help — список доступных команд для взаимодействи
+            Другие:
+                  •//help - выводит список доступных команд
+            ";
+            #endregion
         }
 
         private List<string> GetListValuesFromJson(string json, string attribute)

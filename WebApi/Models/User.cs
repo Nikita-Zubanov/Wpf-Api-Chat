@@ -11,11 +11,5 @@ namespace WebApi.Models
         public string Name { get; set; }
         public string Password { get; set; }
         public string Status { get; set; }
-
-        private static int id;
-        public void AutoIncrement()
-        {
-            Id = ++id;
-        }
     }
 }

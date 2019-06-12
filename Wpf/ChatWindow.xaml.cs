@@ -64,7 +64,7 @@ namespace Wpf
             {
                 Name = tabName,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Height = 64,
+                Height = 50,
                 Margin = new Thickness(0, 277, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 617
