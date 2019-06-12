@@ -12,7 +12,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class ChatController : ControllerBase
     {
-        private static readonly ChatContext ChatContext = new ChatContext();
+        private static readonly ChatAppContext ChatContext = new ChatAppContext();
 
         [Route("message")]
         [HttpPost]
@@ -46,7 +46,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Chat>> Get()
         {
-            return ChatContext.Get();
+            return ChatContext.GetChat();
         }
     }
 }

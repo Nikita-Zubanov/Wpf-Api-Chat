@@ -10,6 +10,9 @@ namespace WebApi.Models
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Chats> Chats { get; set; }
+        public DbSet<Chat> Chat { get; set; }
+        public DbSet<UsersInChats> UsersInChats { get; set; }
+
         public ChatAppContext()
         {
             Database.EnsureCreated();
@@ -69,15 +72,96 @@ namespace WebApi.Models
             }
         }
 
-        /*
-         *  Для Postman'а
-         */
+        public void AddMessage(Chat chat)
+        {
+            //if (IsUserInChat(chat)) 
+            // Chat.Add(chat); 
+            if (IsUserInChat(chat.Name, chat.Author))
+                using (ChatAppContext db = new ChatAppContext())
+                {
+                    Chat newMessage = new Chat { Name = chat.Name, Author = chat.Author, Message = chat.Message };
+
+                    db.Chat.Add(newMessage);
+                    db.SaveChanges();
+                }
+        }
+        public void AddUser(UsersInChats userInChat)
+        {
+            //UsersInChats.Add(userInChat); 
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                UsersInChats newUserInChat = new UsersInChats { ChatName = userInChat.ChatName, UserName = userInChat.UserName };
+
+                db.UsersInChats.Add(newUserInChat);
+                db.SaveChanges();
+            }
+        }
+        public List<Chat> GetChat(string name)
+        {
+            //List<Chat> currentChat = new List<Chat>(); 
+
+            //for (int i = 0; i < Chat.Count; i++) 
+            // if (Chat[i].Name == name) 
+            // currentChat.Add(Chat[i]); 
+
+            //return currentChat; 
+
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                List<Chat> currentChat = new List<Chat>();
+
+                List<Chat> allChats = db.Chat.ToList();
+                for (int i = 0; i < allChats.Count; i++)
+                    if (allChats[i].Name == name)
+                        currentChat.Add(allChats[i]);
+
+                return currentChat;
+            }
+        }
+        public List<UsersInChats> GetUsers(string name)
+        {
+            //List<UsersInChats> users = UsersInChats.FindAll(u => u.ChatName == name); 
+
+            //return users; 
+
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                List<UsersInChats> usersInChat = new List<UsersInChats>();
+
+                List<UsersInChats> allUsersInChats = db.UsersInChats.ToList();
+                for (int i = 0; i < allUsersInChats.Count; i++)
+                    if (allUsersInChats[i].ChatName == name)
+                        usersInChat.Add(allUsersInChats[i]);
+
+                return usersInChat;
+            }
+        }
+        private bool IsUserInChat(string chatName, string userName)
+        {
+            //UsersInChats userInChat = UsersInChats.Find(uic => (uic.ChatName == chat.Name) && (uic.UserName == chat.Author)); 
+            //if (userInChat == null) 
+            // return false; 
+
+            //return true; 
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                UsersInChats userInChat = db.UsersInChats.FirstOrDefault(u => u.ChatName == chatName && u.UserName == userName);
+
+                if (userInChat == null)
+                    return false;
+
+                return true;
+            }
+        }
+        /* 
+        * Для Postman'а 
+        */
         public List<User> GetUsers()
         {
             using (ChatAppContext db = new ChatAppContext())
             {
                 List<User> allUsers = db.Users.ToList();
-                
+
                 return allUsers;
             }
         }
@@ -89,6 +173,16 @@ namespace WebApi.Models
                 List<Chats> allChats = db.Chats.ToList();
 
                 return allChats;
+            }
+        }
+
+        public List<Chat> GetChat()
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                List<Chat> allChat = db.Chat.ToList();
+
+                return allChat;
             }
         }
     }
