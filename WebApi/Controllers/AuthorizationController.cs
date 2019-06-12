@@ -18,7 +18,7 @@ namespace WebApi.Controllers
         [HttpPost]
         public void Register([FromBody] User user)
         {
-            UsersContext.Register(user, "Online");
+            UsersContext.Register(user, "user", "Online");
         }
 
         [Route("login")]

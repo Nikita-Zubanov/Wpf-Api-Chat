@@ -22,7 +22,17 @@ namespace WebApi.Models
         {
             optionsBuilder.UseSqlServer(@"Server=DESKTOP-BNION4N\SQLEXPRESS;Database=ChatApp;Trusted_Connection=True;");
         }
-        
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>().HasData(
+                new User[]
+                {
+                new User { Id=1, Name="admin", Password="admin", Role="admin", Status="Online" }
+                });
+            base.OnModelCreating(modelBuilder);
+        }
+
         public void LoginOrLogout(User user, string status)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -36,18 +46,16 @@ namespace WebApi.Models
                 
             }
         }
-
-        public void Register(User user, string status)
+        public void Register(User user, string role, string status)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                User newUser = new User { Name = user.Name, Password = user.Password, Status = status };
+                User newUser = new User { Name = user.Name, Password = user.Password, Role = role, Status = status };
 
                 db.Users.Add(newUser);
                 db.SaveChanges();
             }
         }
-
         public bool IsRegistred(string name, string password)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -74,8 +82,6 @@ namespace WebApi.Models
 
         public void AddMessage(Chat chat)
         {
-            //if (IsUserInChat(chat)) 
-            // Chat.Add(chat); 
             if (IsUserInChat(chat.Name, chat.Author))
                 using (ChatAppContext db = new ChatAppContext())
                 {
@@ -87,7 +93,6 @@ namespace WebApi.Models
         }
         public void AddUser(UsersInChats userInChat)
         {
-            //UsersInChats.Add(userInChat); 
             using (ChatAppContext db = new ChatAppContext())
             {
                 UsersInChats newUserInChat = new UsersInChats { ChatName = userInChat.ChatName, UserName = userInChat.UserName };
@@ -98,14 +103,6 @@ namespace WebApi.Models
         }
         public List<Chat> GetChat(string name)
         {
-            //List<Chat> currentChat = new List<Chat>(); 
-
-            //for (int i = 0; i < Chat.Count; i++) 
-            // if (Chat[i].Name == name) 
-            // currentChat.Add(Chat[i]); 
-
-            //return currentChat; 
-
             using (ChatAppContext db = new ChatAppContext())
             {
                 List<Chat> currentChat = new List<Chat>();
@@ -120,10 +117,6 @@ namespace WebApi.Models
         }
         public List<UsersInChats> GetUsers(string name)
         {
-            //List<UsersInChats> users = UsersInChats.FindAll(u => u.ChatName == name); 
-
-            //return users; 
-
             using (ChatAppContext db = new ChatAppContext())
             {
                 List<UsersInChats> usersInChat = new List<UsersInChats>();
@@ -138,11 +131,6 @@ namespace WebApi.Models
         }
         private bool IsUserInChat(string chatName, string userName)
         {
-            //UsersInChats userInChat = UsersInChats.Find(uic => (uic.ChatName == chat.Name) && (uic.UserName == chat.Author)); 
-            //if (userInChat == null) 
-            // return false; 
-
-            //return true; 
             using (ChatAppContext db = new ChatAppContext())
             {
                 UsersInChats userInChat = db.UsersInChats.FirstOrDefault(u => u.ChatName == chatName && u.UserName == userName);
@@ -153,6 +141,7 @@ namespace WebApi.Models
                 return true;
             }
         }
+
         /* 
         * Для Postman'а 
         */
