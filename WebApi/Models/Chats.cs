@@ -10,11 +10,6 @@ namespace WebApi.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Creator { get; set; }
-
-        private static int id;
-        public void AutoIncrement()
-        {
-            Id = ++id;
-        }
+        
     }
 }

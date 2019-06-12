@@ -12,7 +12,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class AuthorizationController : ControllerBase
     {
-        private static readonly UsersContext UsersContext = new UsersContext();
+        private static readonly ChatAppContext UsersContext = new ChatAppContext();
 
         [Route("register")]
         [HttpPost]
@@ -47,7 +47,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<User>> Get()
         {
-            return UsersContext.Get();
+            return UsersContext.GetUsers();
         }
     }
 }

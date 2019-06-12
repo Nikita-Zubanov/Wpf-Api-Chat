@@ -12,7 +12,7 @@ namespace WebApi.Controllers
     [ApiController]
     public class ChatsController : ControllerBase
     {
-        private static readonly ChatsContext ChatsContext = new ChatsContext();
+        private static readonly ChatAppContext ChatsContext = new ChatAppContext();
 
         [HttpPost]
         public void Create([FromBody] Chats chat)
@@ -26,7 +26,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Chats>> Get()
         {
-            return ChatsContext.Get();
+            return ChatsContext.GetChats();
         }
     }
 }
