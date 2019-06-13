@@ -12,5 +12,12 @@ namespace WebApi.Models
         public string Password { get; set; }
         public string Role { get; set; }
         public string Status { get; set; }
+        
+        public List<UserChat> UserChat { get; set; }
+
+        public User()
+        {
+            UserChat = new List<UserChat>();
+        }
     }
 }

@@ -13,6 +13,8 @@ namespace WebApi.Models
         public DbSet<Chat> Chat { get; set; }
         public DbSet<UsersInChats> UsersInChats { get; set; }
 
+        public DbSet<UserChat> UsersChats { get; set; }
+
         public ChatAppContext()
         {
             Database.EnsureCreated();
@@ -31,6 +33,19 @@ namespace WebApi.Models
                 new User { Id=1, Name="admin", Password="admin", Role="admin", Status="Online" }
                 });
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<UserChat>()
+               .HasKey(t => new { t.UserId, t.ChatsId });
+
+            modelBuilder.Entity<UserChat>()
+                .HasOne(sc => sc.User)
+                .WithMany(s => s.UserChat)
+                .HasForeignKey(sc => sc.UserId);
+
+            modelBuilder.Entity<UserChat>()
+                .HasOne(sc => sc.Chats)
+                .WithMany(c => c.UserChat)
+                .HasForeignKey(sc => sc.ChatsId);
         }
 
         public void LoginOrLogout(User user, string status)
@@ -76,6 +91,23 @@ namespace WebApi.Models
                 Chats newChat = new Chats { Name = chat.Name, Creator = chat.Creator};
 
                 db.Chats.Add(newChat);
+                db.SaveChanges();
+            }
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User u1 = new User { Name = "Tom" };
+                User u2 = new User { Name = "Alice" };
+                db.Users.AddRange(new List<User> { u1, u2 });
+
+                Chats c1 = new Chats { Name = "Алгоритмы" };
+                Chats c2 = new Chats { Name = "Основы программирования" };
+                db.Chats.AddRange(new List<Chats> { c1, c2 });
+
+                db.SaveChanges();
+
+                // добавляем к студентам курсы
+                u1.UserChat.Add(new UserChat { ChatsId = c1.Id, UserId = u1.Id });
+                u2.UserChat.Add(new UserChat { ChatsId = c2.Id, UserId = u2.Id });
                 db.SaveChanges();
             }
         }

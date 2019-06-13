@@ -2,17 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApi.Models;
 
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ChatAppContext))]
-    [Migration("20190612091120_roleUser")]
-    partial class roleUser
+    partial class ChatAppContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,6 +79,19 @@ namespace WebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("WebApi.Models.UserChat", b =>
+                {
+                    b.Property<int>("UserId");
+
+                    b.Property<int>("ChatsId");
+
+                    b.HasKey("UserId", "ChatsId");
+
+                    b.HasIndex("ChatsId");
+
+                    b.ToTable("UsersChats");
+                });
+
             modelBuilder.Entity("WebApi.Models.UsersInChats", b =>
                 {
                     b.Property<int>("Id")
@@ -94,6 +105,19 @@ namespace WebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UsersInChats");
+                });
+
+            modelBuilder.Entity("WebApi.Models.UserChat", b =>
+                {
+                    b.HasOne("WebApi.Models.Chats", "Chats")
+                        .WithMany("UserChat")
+                        .HasForeignKey("ChatsId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("WebApi.Models.User", "User")
+                        .WithMany("UserChat")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

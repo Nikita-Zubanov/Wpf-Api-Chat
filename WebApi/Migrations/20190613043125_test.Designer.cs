@@ -9,8 +9,8 @@ using WebApi.Models;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ChatAppContext))]
-    [Migration("20190612084236_chatsUserChatMigration")]
-    partial class chatsUserChatMigration
+    [Migration("20190613043125_test")]
+    partial class test
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -62,11 +62,36 @@ namespace WebApi.Migrations
 
                     b.Property<string>("Password");
 
+                    b.Property<string>("Role");
+
                     b.Property<string>("Status");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "admin",
+                            Password = "admin",
+                            Role = "admin",
+                            Status = "Online"
+                        });
+                });
+
+            modelBuilder.Entity("WebApi.Models.UserChat", b =>
+                {
+                    b.Property<int>("UserId");
+
+                    b.Property<int>("ChatsId");
+
+                    b.HasKey("UserId", "ChatsId");
+
+                    b.HasIndex("ChatsId");
+
+                    b.ToTable("UsersChats");
                 });
 
             modelBuilder.Entity("WebApi.Models.UsersInChats", b =>
@@ -82,6 +107,19 @@ namespace WebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UsersInChats");
+                });
+
+            modelBuilder.Entity("WebApi.Models.UserChat", b =>
+                {
+                    b.HasOne("WebApi.Models.Chats", "Chats")
+                        .WithMany("UserChat")
+                        .HasForeignKey("ChatsId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("WebApi.Models.User", "User")
+                        .WithMany("UserChat")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

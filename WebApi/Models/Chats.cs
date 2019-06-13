@@ -10,6 +10,12 @@ namespace WebApi.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Creator { get; set; }
-        
+
+        public List<UserChat> UserChat { get; set; }
+
+        public Chats()
+        {
+            UserChat = new List<UserChat>();
+        }
     }
 }
