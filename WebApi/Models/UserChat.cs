@@ -12,5 +12,8 @@ namespace WebApi.Models
 
         public int ChatsId { get; set; }
         public Chats Chats { get; set; }
+
+        public string UserName { get; set; }
+        public string ChatName { get; set; }
     }
 }

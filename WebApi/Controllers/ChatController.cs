@@ -23,9 +23,9 @@ namespace WebApi.Controllers
 
         [Route("user")]
         [HttpPost]
-        public void AddUser([FromBody] UsersInChats value)
+        public void AddUser([FromBody] UserChat userChat)
         {
-            ChatContext.AddUser(value);
+            ChatContext.AddUser(userChat);
         }
 
         [HttpGet("{Name}")]

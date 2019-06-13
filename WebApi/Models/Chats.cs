@@ -11,11 +11,24 @@ namespace WebApi.Models
         public string Name { get; set; }
         public string Creator { get; set; }
 
-        public List<UserChat> UserChat { get; set; }
+        //public List<UserChat> UserChat { get; set; }
 
-        public Chats()
+        //public Chats()
+        //{
+        //    UserChat = new List<UserChat>();
+        //}
+
+        private static List<UserChat> userChat = new List<UserChat>();
+        public List<UserChat> UserChat
         {
-            UserChat = new List<UserChat>();
+            get
+            {
+                return userChat;
+            }
+            set
+            {
+                userChat.Concat(value);
+            }
         }
     }
 }
