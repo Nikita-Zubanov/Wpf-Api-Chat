@@ -9,7 +9,7 @@ using WebApi.Models;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ChatAppContext))]
-    [Migration("20190613150713_one")]
+    [Migration("20190613161004_one")]
     partial class one
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

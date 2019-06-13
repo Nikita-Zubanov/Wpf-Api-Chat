@@ -71,7 +71,7 @@ namespace WebApi.Models
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                User newUser = new User { Name = user.Name, Password = user.Password, Role = role, Status = status, UserChat = new List<UserChat>()};
+                User newUser = new User { Name = user.Name, Password = user.Password, Role = role, Status = status};
 
                 db.Users.Add(newUser);
                 db.SaveChanges();
@@ -144,8 +144,8 @@ namespace WebApi.Models
                 Chats chat = db.Chats.FirstOrDefault(c => c.Name == userChat.ChatName);
                 UserChat newUserChat = new UserChat { ChatsId = chat.Id, Chats = chat, UserId = user.Id, User = user };
 
-                user.UserChat.Add(newUserChat);
-                chat.UserChat.Add(newUserChat);
+                user.AddUserToChat(newUserChat);
+                chat.AddUserToChat(newUserChat);
 
                 db.Users.Update(user);
                 db.Chats.Update(chat);
