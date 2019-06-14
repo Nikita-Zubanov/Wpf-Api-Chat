@@ -32,7 +32,7 @@ namespace Wpf
             ChatControl = chatControl;
         }
 
-        private void CreateButton_Click(object sender, RoutedEventArgs e)
+        private async void CreateButton_Click(object sender, RoutedEventArgs e)
         {
             string chatName = ChatNameBox.Text;
 

@@ -16,15 +16,5 @@ namespace WebApi.Models
         {
             UserChat = new List<UserChat>();
         }
-
-        private static List<UserChat> UsersChats = new List<UserChat>();
-        public void AddUserToChat(UserChat userChat)
-        {
-            UsersChats.Add(userChat);
-        }
-        public List<UserChat> GetUsersChats()
-        {
-            return UsersChats;
-        }
     }
 }

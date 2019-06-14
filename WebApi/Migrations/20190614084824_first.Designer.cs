@@ -9,8 +9,8 @@ using WebApi.Models;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ChatAppContext))]
-    [Migration("20190613161004_one")]
-    partial class one
+    [Migration("20190614084824_first")]
+    partial class first
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -49,7 +49,7 @@ namespace WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Chats");
+                    b.ToTable("allChat");
                 });
 
             modelBuilder.Entity("WebApi.Models.User", b =>
@@ -91,7 +91,7 @@ namespace WebApi.Migrations
 
                     b.HasIndex("ChatsId");
 
-                    b.ToTable("UsersChats");
+                    b.ToTable("UserChat");
                 });
 
             modelBuilder.Entity("WebApi.Models.UsersInChats", b =>

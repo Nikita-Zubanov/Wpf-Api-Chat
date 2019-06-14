@@ -47,7 +47,7 @@ namespace WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Chats");
+                    b.ToTable("allChat");
                 });
 
             modelBuilder.Entity("WebApi.Models.User", b =>
@@ -89,7 +89,7 @@ namespace WebApi.Migrations
 
                     b.HasIndex("ChatsId");
 
-                    b.ToTable("UsersChats");
+                    b.ToTable("UserChat");
                 });
 
             modelBuilder.Entity("WebApi.Models.UsersInChats", b =>
