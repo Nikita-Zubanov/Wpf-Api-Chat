@@ -17,9 +17,10 @@
                 <MenuItem x:Name="CreateChatItem" Header="Создать чат" Click="CreateChatItem_Click"/>
             </MenuItem>
         </Menu>
-        <Expander x:Name="ExpanderConsoleBox" Header="" Height="30" Margin="9,40,0,0" VerticalAlignment="Top" Width="772" Background="Transparent" ExpandDirection="Right" HorizontalAlignment="Left" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Padding="0" UseLayoutRounding="False" MouseMove="ExpanderConsoleBox_MouseMove" ToolTip="">
+        <Expander x:Name="ExpanderConsoleBox" Header="" Height="30" Margin="9,40,0,0" VerticalAlignment="Top" Width="662" Background="Transparent" ExpandDirection="Right" HorizontalAlignment="Left" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Padding="0" UseLayoutRounding="False" MouseMove="ExpanderConsoleBox_MouseMove" ToolTip="">
             <TextBox x:Name="ConsoleBox" HorizontalAlignment="Left" Height="25" TextWrapping="Wrap" Width="750" Margin="0,0,0,2" Background="#FF3F3F46" Foreground="#FFF3F3F3" TextDecorations="{x:Null}" FontSize="14" KeyDown="ConsoleBox_KeyDown"/>
         </Expander>
+        <Button Content="Button" HorizontalAlignment="Left" Margin="705,40,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
 
     </Grid>
 </Window>

@@ -9,7 +9,7 @@ using WebApi.Models;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ChatAppContext))]
-    [Migration("20190614084824_first")]
+    [Migration("20190615150538_first")]
     partial class first
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,27 +69,17 @@ namespace WebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "admin",
-                            Password = "admin",
-                            Role = "admin",
-                            Status = "Online"
-                        });
                 });
 
             modelBuilder.Entity("WebApi.Models.UserChat", b =>
                 {
-                    b.Property<int>("UserId");
-
                     b.Property<int>("ChatsId");
 
-                    b.HasKey("UserId", "ChatsId");
+                    b.Property<int>("UserId");
 
-                    b.HasIndex("ChatsId");
+                    b.HasKey("ChatsId", "UserId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserChat");
                 });
@@ -112,12 +102,12 @@ namespace WebApi.Migrations
             modelBuilder.Entity("WebApi.Models.UserChat", b =>
                 {
                     b.HasOne("WebApi.Models.Chats", "Chats")
-                        .WithMany("UserChat")
+                        .WithMany("ChatUsers")
                         .HasForeignKey("ChatsId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("WebApi.Models.User", "User")
-                        .WithMany("UserChat")
+                        .WithMany("UserChats")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

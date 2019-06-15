@@ -11,10 +11,6 @@ namespace WebApi.Models
         public string Name { get; set; }
         public string Creator { get; set; }
 
-        public List<UserChat> UserChat { get; set; }
-        public Chats()
-        {
-            UserChat = new List<UserChat>();
-        }
+        public virtual ICollection<UserChat> UserChats { get; set; }
     }
 }

@@ -8,12 +8,9 @@ namespace WebApi.Models
     public class UserChat
     {
         public int UserId { get; set; }
-        public User User { get; set; }
+        public virtual User User { get; set; }
 
         public int ChatsId { get; set; }
-        public Chats Chats { get; set; }
-
-        public string UserName { get; set; }
-        public string ChatName { get; set; }
+        public virtual Chats Chats { get; set; }
     }
 }

@@ -13,10 +13,6 @@ namespace WebApi.Models
         public string Role { get; set; }
         public string Status { get; set; }
         
-        public List<UserChat> UserChat { get; set; }
-        public User()
-        {
-            UserChat = new List<UserChat>();
-        }
+        public virtual ICollection<UserChat> UserChats { get; set; }
     }
 }

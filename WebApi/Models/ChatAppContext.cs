@@ -30,25 +30,20 @@ namespace WebApi.Models
             modelBuilder.Entity<User>().HasData(
                 new User[]
                 {
-                new User { Id=1, Name="admin", Password="admin", Role="admin", Status="Online" }
+                new User { Id = 1, Name = "admin", Password = "admin", Role = "admin", Status = "Online" }
                 });
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<UserChat>()
-               .HasKey(k => new { k.UserId, k.ChatsId });
-
+                .HasKey(uc => new { uc.ChatsId, uc.UserId });
             modelBuilder.Entity<UserChat>()
                 .HasOne(uc => uc.User)
-                .WithMany(u => u.UserChat)
-                .HasForeignKey(uc => uc.UserId);
-
-            modelBuilder.Entity<UserChat>()
-                .HasOne(uc => uc.Chats)
-                .WithMany(c => c.UserChat)
+                .WithMany(c => c.UserChats)
                 .HasForeignKey(uc => uc.ChatsId);
-
-            modelBuilder.Entity<UserChat>().Ignore(b => b.ChatName);
-            modelBuilder.Entity<UserChat>().Ignore(b => b.UserName);
+            modelBuilder.Entity<UserChat>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.UserChats)
+                .HasForeignKey(uc => uc.UserId);
         }
 
         public void LoginOrLogout(User user, string status)
@@ -113,11 +108,12 @@ namespace WebApi.Models
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                User user = db.Users.FirstOrDefault(u => u.Name == userChat.UserName);
-                Chats chat = db.allChat.FirstOrDefault(c => c.Name == userChat.ChatName);
+                Chats chat = db.allChat.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.Chats.Name);
+                User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.User.Name);
                 UserChat newUserChat = new UserChat { ChatsId = chat.Id, UserId = user.Id };
 
-                user.UserChat.Add(newUserChat);
+                chat.UserChats.Add(newUserChat);
+                user.UserChats.Add(newUserChat);
 
                 db.SaveChanges();
             }
@@ -136,18 +132,22 @@ namespace WebApi.Models
                 return currentChat;
             }
         }
-        public List<UsersInChats> GetUsers(string name)
+        public List<User> GetUsers(string name)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<UsersInChats> usersInChat = new List<UsersInChats>();
+                List<User> users = new List<User>();
 
-                List<UsersInChats> allUsersInChats = db.UsersInChats.ToList();
-                for (int i = 0; i < allUsersInChats.Count; i++)
-                    if (allUsersInChats[i].ChatName == name)
-                        usersInChat.Add(allUsersInChats[i]);
+                Chats chat = db.allChat.Include(u => u.UserChats).FirstOrDefault(c => c.Name == name);
+                List<UserChat> userChats = chat.UserChats.Where(c => c.Chats.Name == name).ToList();
+                if (userChats.Count != 0)
+                    foreach (UserChat userChat in userChats)
+                    {
+                        User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Id == userChat.UserId);
+                        users.Add(new User { Name = user.Name, Role = user.Role, Status = user.Status });
+                    }
 
-                return usersInChat;
+                return users;
             }
         }
         private bool IsUserInChat(string chatName, string userName)

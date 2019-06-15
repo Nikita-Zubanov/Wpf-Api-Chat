@@ -35,7 +35,7 @@ namespace WebApi.Controllers
         }
         
         [HttpGet("users/{Name}")]
-        public ActionResult<IEnumerable<UsersInChats>> GetUsers(string name)
+        public ActionResult<IEnumerable<User>> GetUsers(string name)
         {
             return ChatContext.GetUsers(name);
         }

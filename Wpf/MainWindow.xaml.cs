@@ -26,8 +26,8 @@ namespace Wpf
         {
             InitializeComponent();
 
-            Thread secondThread = new Thread(SecondThread);
-            secondThread.Start();
+            //Thread secondThread = new Thread(SecondThread);
+            //secondThread.Start();
         }
 
         public static void MessageButton_Click(object sender, EventArgs e)
@@ -38,12 +38,17 @@ namespace Wpf
             ChatWindow.TextBox[ChatSelected].Clear();
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Thread secondThread = new Thread(SecondThread);
+            secondThread.Start();
+        }
         private void SecondThread()
         {
             Dispatcher.BeginInvoke((Action)(() => UpdateListBoxes()));
 
             Thread.Sleep(300);
-            SecondThread();
+            //SecondThread();
         }
         private async void UpdateListBoxes()
         {
@@ -56,7 +61,7 @@ namespace Wpf
                 string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
                 string chatJson = await ApiManager.Read($"api/chat/{ChatSelected}");
 
-                users = GetListValuesFromJson(usersJson, "userName");
+                users = GetListValuesFromJson(usersJson, "name");
                 authors = GetListValuesFromJson(chatJson, "author");
                 messages = GetListValuesFromJson(chatJson, "message");
                 
