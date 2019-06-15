@@ -9,8 +9,8 @@ namespace WebApi.Models
     public class ChatAppContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        public DbSet<Chats> allChat { get; set; }
-        public DbSet<Chat> Chat { get; set; }
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<Message> Messages { get; set; }
         public DbSet<UsersInChats> UsersInChats { get; set; }
 
         //public DbSet<UserChat> UserChats { get; set; }
@@ -35,15 +35,20 @@ namespace WebApi.Models
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<UserChat>()
-                .HasKey(uc => new { uc.ChatsId, uc.UserId });
+                .HasKey(uc => new { uc.ChatId, uc.UserId });
             modelBuilder.Entity<UserChat>()
                 .HasOne(uc => uc.User)
                 .WithMany(c => c.UserChats)
-                .HasForeignKey(uc => uc.ChatsId);
+                .HasForeignKey(uc => uc.ChatId);
             modelBuilder.Entity<UserChat>()
                 .HasOne(uc => uc.User)
                 .WithMany(u => u.UserChats)
                 .HasForeignKey(uc => uc.UserId);
+            
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Chat)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ChatId);
         }
 
         public void LoginOrLogout(User user, string status)
@@ -82,25 +87,27 @@ namespace WebApi.Models
             }
         }
 
-        public void Create(Chats chat)
+        public void Create(Chat chat)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                Chats newChat = new Chats { Name = chat.Name, Creator = chat.Creator };
+                Chat newChat = new Chat { Name = chat.Name, Creator = chat.Creator };
 
-                db.allChat.Add(newChat);
+                db.Chats.Add(newChat);
                 db.SaveChanges();
             }
         }
 
-        public void AddMessage(Chat chat)
+        public void AddMessage(Message message)
         {
-            if (IsUserInChat(chat.Name, chat.Author))
+            if (IsUserInChat(message.ChatName, message.Author))
                 using (ChatAppContext db = new ChatAppContext())
                 {
-                    Chat newMessage = new Chat { Name = chat.Name, Author = chat.Author, Message = chat.Message };
+                    Chat chat = db.Chats.Include(s => s.Messages).FirstOrDefault(s => s.Name == message.ChatName);
+                    Message newMessage = new Message { ChatName = message.ChatName, Author = message.Author, Text = message.Text };
 
-                    db.Chat.Add(newMessage);
+                    chat.Messages.Add(newMessage);
+
                     db.SaveChanges();
                 }
         }
@@ -108,9 +115,9 @@ namespace WebApi.Models
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                Chats chat = db.allChat.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.Chats.Name);
+                Chat chat = db.Chats.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.Chat.Name);
                 User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.User.Name);
-                UserChat newUserChat = new UserChat { ChatsId = chat.Id, UserId = user.Id };
+                UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id };
 
                 chat.UserChats.Add(newUserChat);
                 user.UserChats.Add(newUserChat);
@@ -118,28 +125,28 @@ namespace WebApi.Models
                 db.SaveChanges();
             }
         }
-        public List<Chat> GetChat(string name)
+        public List<Message> GetChat(string chatName)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<Chat> currentChat = new List<Chat>();
+                List<Message> currentChat = new List<Message>();
 
-                List<Chat> allChats = db.Chat.ToList();
-                for (int i = 0; i < allChats.Count; i++)
-                    if (allChats[i].Name == name)
-                        currentChat.Add(allChats[i]);
+                List<Message> messages = db.Messages.Where(m => m.ChatName == chatName).ToList();
+                //for (int i = 0; i < allChats.Count; i++)
+                //    if (allChats[i].ChatName == name)
+                //        currentChat.Add(allChats[i]);
 
-                return currentChat;
+                return messages;
             }
         }
-        public List<User> GetUsers(string name)
+        public List<User> GetUsers(string chatName)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
                 List<User> users = new List<User>();
 
-                Chats chat = db.allChat.Include(u => u.UserChats).FirstOrDefault(c => c.Name == name);
-                List<UserChat> userChats = chat.UserChats.Where(c => c.Chats.Name == name).ToList();
+                Chat chat = db.Chats.Include(u => u.UserChats).FirstOrDefault(c => c.Name == chatName);
+                List<UserChat> userChats = chat.UserChats.Where(c => c.Chat.Name == chatName).ToList();
                 if (userChats.Count != 0)
                     foreach (UserChat userChat in userChats)
                     {
@@ -154,12 +161,16 @@ namespace WebApi.Models
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                UsersInChats userInChat = db.UsersInChats.FirstOrDefault(u => u.ChatName == chatName && u.UserName == userName);
+                Chat chat = db.Chats.Include(u => u.UserChats).FirstOrDefault(c => c.Name == chatName);
+                List<UserChat> userChats = chat.UserChats.Where(c => c.Chat.Name == chatName).ToList();
+                User user = new User();
+                foreach (UserChat userChat in userChats)
+                    user = db.Users.Where(u => u.Id == userChat.UserId).FirstOrDefault();
 
-                if (userInChat == null)
-                    return false;
+                if (user.Name == userName)
+                    return true;
 
-                return true;
+                return false;
             }
         }
 
@@ -170,29 +181,29 @@ namespace WebApi.Models
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<User> allUsers = db.Users.ToList();
+                List<User> users = db.Users.ToList();
 
-                return allUsers;
+                return users;
             }
         }
 
-        public List<Chats> GetChats()
+        public List<Message> GetMessages()
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<Chats> allChats = db.allChat.ToList();
+                List<Message> messages = db.Messages.ToList();
 
-                return allChats;
+                return messages;
             }
         }
 
-        public List<Chat> GetChat()
+        public List<Chat> GetChats()
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<Chat> allChat = db.Chat.ToList();
+                List<Chat> chats = db.Chats.ToList();
 
-                return allChat;
+                return chats;
             }
         }
     }

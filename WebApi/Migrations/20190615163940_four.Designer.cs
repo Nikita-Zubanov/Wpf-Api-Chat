@@ -9,8 +9,8 @@ using WebApi.Models;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ChatAppContext))]
-    [Migration("20190615150538_first")]
-    partial class first
+    [Migration("20190615163940_four")]
+    partial class four
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -26,30 +26,34 @@ namespace WebApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Author");
-
-                    b.Property<string>("Message");
-
-                    b.Property<string>("Name");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Chat");
-                });
-
-            modelBuilder.Entity("WebApi.Models.Chats", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
                     b.Property<string>("Creator");
 
                     b.Property<string>("Name");
 
                     b.HasKey("Id");
 
-                    b.ToTable("allChat");
+                    b.ToTable("Chats");
+                });
+
+            modelBuilder.Entity("WebApi.Models.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Author");
+
+                    b.Property<int>("ChatId");
+
+                    b.Property<string>("ChatName");
+
+                    b.Property<string>("Text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("WebApi.Models.User", b =>
@@ -69,6 +73,16 @@ namespace WebApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "admin",
+                            Password = "admin",
+                            Role = "admin",
+                            Status = "Online"
+                        });
                 });
 
             modelBuilder.Entity("WebApi.Models.UserChat", b =>
@@ -99,10 +113,18 @@ namespace WebApi.Migrations
                     b.ToTable("UsersInChats");
                 });
 
+            modelBuilder.Entity("WebApi.Models.Message", b =>
+                {
+                    b.HasOne("WebApi.Models.Chat", "Chat")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("WebApi.Models.UserChat", b =>
                 {
-                    b.HasOne("WebApi.Models.Chats", "Chats")
-                        .WithMany("ChatUsers")
+                    b.HasOne("WebApi.Models.Chat", "Chats")
+                        .WithMany("UserChats")
                         .HasForeignKey("ChatsId")
                         .OnDelete(DeleteBehavior.Cascade);
 

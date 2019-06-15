@@ -14,9 +14,16 @@ namespace WebApi.Controllers
     {
         private static readonly ChatAppContext ChatContext = new ChatAppContext();
 
+        [Route("create")]
+        [HttpPost]
+        public void Create([FromBody] Chat chat)
+        {
+            ChatContext.Create(chat);
+        }
+
         [Route("message")]
         [HttpPost]
-        public void AddMessage([FromBody] Chat value)
+        public void AddMessage([FromBody] Message value)
         {
             ChatContext.AddMessage(value);
         }
@@ -29,7 +36,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{Name}")]
-        public ActionResult<IEnumerable<Chat>> GetChat(string name)
+        public ActionResult<IEnumerable<Message>> GetChat(string name)
         {
             return ChatContext.GetChat(name);
         }
@@ -43,10 +50,18 @@ namespace WebApi.Controllers
         /*
          *  Для Postman'а
          */
+        [Route("getMessages")]
         [HttpGet]
-        public ActionResult<IEnumerable<Chat>> Get()
+        public ActionResult<IEnumerable<Message>> GetMessages()
         {
-            return ChatContext.GetChat();
+            return ChatContext.GetMessages();
+        }
+
+        [Route("getChats")]
+        [HttpGet]
+        public ActionResult<IEnumerable<Chat>> GetChats()
+        {
+            return ChatContext.GetChats();
         }
     }
 }

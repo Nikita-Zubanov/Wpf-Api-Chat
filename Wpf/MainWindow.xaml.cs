@@ -33,7 +33,7 @@ namespace Wpf
         public static void MessageButton_Click(object sender, EventArgs e)
         {
             if (ChatWindow.TextBox[ChatSelected].Text != string.Empty)
-                ApiManager.Create("api/chat/message", $"{{\"Name\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Message\":\"{ChatWindow.TextBox[ChatSelected].Text}\"}}");
+                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Text\":\"{ChatWindow.TextBox[ChatSelected].Text}\"}}");
 
             ChatWindow.TextBox[ChatSelected].Clear();
         }
@@ -63,7 +63,7 @@ namespace Wpf
 
                 users = GetListValuesFromJson(usersJson, "name");
                 authors = GetListValuesFromJson(chatJson, "author");
-                messages = GetListValuesFromJson(chatJson, "message");
+                messages = GetListValuesFromJson(chatJson, "text");
                 
                 ChatWindow.ChatBox[ChatSelected].Items.Clear();
                 for (int i = 0; i < authors.Count; i++)

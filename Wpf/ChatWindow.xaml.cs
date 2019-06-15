@@ -41,8 +41,8 @@ namespace Wpf
                 ChatControl.Items.Add(CreateTabItem(chatName));
                 ChatControl.SelectedIndex = ChatControl.Items.Count - 1;
 
-                ApiManager.Create("api/chats", $"{{'Name':'{chatName}', 'Creator':'{User.Name}'}}");
-                ApiManager.Create("api/chat/user", $"{{ 'Chats':{{'Name':'{chatName}'}}, 'User':{{'Name':'{User.Name}'}} }}");
+                ApiManager.Create("api/chat/create", $"{{'Name':'{chatName}', 'Creator':'{User.Name}'}}");
+                ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{User.Name}'}} }}");
                 Close();
             }
             else
