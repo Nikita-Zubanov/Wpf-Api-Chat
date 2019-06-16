@@ -11,9 +11,6 @@ namespace WebApi.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<Message> Messages { get; set; }
-        public DbSet<UsersInChats> UsersInChats { get; set; }
-
-        //public DbSet<UserChat> UserChats { get; set; }
 
         public ChatAppContext()
         {
@@ -50,7 +47,7 @@ namespace WebApi.Models
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ChatId);
         }
-
+        #region Authorization methods
         public void LoginOrLogout(User user, string status)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -64,6 +61,7 @@ namespace WebApi.Models
                 
             }
         }
+
         public void Register(User user, string role, string status)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -74,6 +72,7 @@ namespace WebApi.Models
                 db.SaveChanges();
             }
         }
+
         public bool IsRegistred(string name, string password)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -86,7 +85,9 @@ namespace WebApi.Models
                 return true;
             }
         }
-
+        #endregion
+        
+        #region Chat CRUD-methods
         public void Create(Chat chat)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -98,6 +99,28 @@ namespace WebApi.Models
             }
         }
 
+        public void Delete(string chatName, string userName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userName);
+                Chat chat = db.Chats.Include(s => s.UserChats).FirstOrDefault(s => s.Name == chatName);
+                if (chat.Creator == userName)
+                {
+                    UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id };
+
+                    chat.UserChats.Remove(newUserChat);
+                    user.UserChats.Remove(newUserChat);
+
+                    db.Remove(chat);
+
+                    db.SaveChanges();
+                }
+            }
+        }
+        #endregion
+
+        #region UserChat and Message methods
         public void AddMessage(Message message)
         {
             if (IsUserInChat(message.ChatName, message.Author))
@@ -111,6 +134,7 @@ namespace WebApi.Models
                     db.SaveChanges();
                 }
         }
+
         public void AddUser(UserChat userChat)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -119,26 +143,28 @@ namespace WebApi.Models
                 User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.User.Name);
                 UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id };
 
-                chat.UserChats.Add(newUserChat);
-                user.UserChats.Add(newUserChat);
+                if (user.UserChats.Select(uc => uc.ChatId).FirstOrDefault() != newUserChat.ChatId)
+                {
+                    chat.UserChats.Add(newUserChat);
+                    user.UserChats.Add(newUserChat);
 
-                db.SaveChanges();
+                    db.SaveChanges();
+                }
             }
         }
-        public List<Message> GetChat(string chatName)
+
+        public List<Message> GetMessages(string chatName)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
                 List<Message> currentChat = new List<Message>();
 
                 List<Message> messages = db.Messages.Where(m => m.ChatName == chatName).ToList();
-                //for (int i = 0; i < allChats.Count; i++)
-                //    if (allChats[i].ChatName == name)
-                //        currentChat.Add(allChats[i]);
 
                 return messages;
             }
         }
+
         public List<User> GetUsers(string chatName)
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -157,26 +183,20 @@ namespace WebApi.Models
                 return users;
             }
         }
+
         private bool IsUserInChat(string chatName, string userName)
         {
-            using (ChatAppContext db = new ChatAppContext())
-            {
-                Chat chat = db.Chats.Include(u => u.UserChats).FirstOrDefault(c => c.Name == chatName);
-                List<UserChat> userChats = chat.UserChats.Where(c => c.Chat.Name == chatName).ToList();
-                User user = new User();
-                foreach (UserChat userChat in userChats)
-                    user = db.Users.Where(u => u.Id == userChat.UserId).FirstOrDefault();
+            List<User> users = GetUsers(chatName);
 
+            foreach (User user in users)
                 if (user.Name == userName)
                     return true;
 
-                return false;
-            }
+            return false;
         }
-
-        /* 
-        * Для Postman'а 
-        */
+        #endregion
+        
+        #region Methods for "postman"
         public List<User> GetUsers()
         {
             using (ChatAppContext db = new ChatAppContext())
@@ -184,16 +204,6 @@ namespace WebApi.Models
                 List<User> users = db.Users.ToList();
 
                 return users;
-            }
-        }
-
-        public List<Message> GetMessages()
-        {
-            using (ChatAppContext db = new ChatAppContext())
-            {
-                List<Message> messages = db.Messages.ToList();
-
-                return messages;
             }
         }
 
@@ -206,5 +216,6 @@ namespace WebApi.Models
                 return chats;
             }
         }
+        #endregion
     }
 }

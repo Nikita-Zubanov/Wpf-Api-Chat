@@ -32,19 +32,21 @@ namespace Wpf
 
         public static void MessageButton_Click(object sender, EventArgs e)
         {
-            if (ChatWindow.TextBox[ChatSelected].Text != string.Empty)
-                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Text\":\"{ChatWindow.TextBox[ChatSelected].Text}\"}}");
+            if (ChatControl.TextBox[ChatSelected].Text != string.Empty)
+                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Text\":\"{ChatControl.TextBox[ChatSelected].Text}\"}}");
 
-            ChatWindow.TextBox[ChatSelected].Clear();
+            ChatControl.TextBox[ChatSelected].Clear();
         }
 
+        #region Methods update boxes and chat tabs. For debudding using button, not thread
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Thread secondThread = new Thread(SecondThread);
             secondThread.Start();
         }
-        private void SecondThread()
+        private async void SecondThread()
         {
+            await Dispatcher.BeginInvoke((Action)(() => UpdateChatTabs()));
             Dispatcher.BeginInvoke((Action)(() => UpdateListBoxes()));
 
             Thread.Sleep(300);
@@ -56,25 +58,48 @@ namespace Wpf
             {
                 List<string> users = new List<string>();
                 List<string> authors = new List<string>();
-                List<string> messages = new List<string>();
-
-                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
-                string chatJson = await ApiManager.Read($"api/chat/{ChatSelected}");
-
-                users = GetListValuesFromJson(usersJson, "name");
-                authors = GetListValuesFromJson(chatJson, "author");
-                messages = GetListValuesFromJson(chatJson, "text");
+                List<string> texts = new List<string>();
                 
-                ChatWindow.ChatBox[ChatSelected].Items.Clear();
-                for (int i = 0; i < authors.Count; i++)
-                    if (authors[i] != string.Empty && messages[i] != string.Empty)
-                        ChatWindow.ChatBox[ChatSelected].Items.Add(authors[i] + ": " + messages[i]);
+                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
+                string messagesJson = await ApiManager.Read($"api/chat/messages/{ChatSelected}");
+                
+                users = GetListValuesFromJson(usersJson, "name");
+                authors = GetListValuesFromJson(messagesJson, "author");
+                texts = GetListValuesFromJson(messagesJson, "text");
 
-                ChatWindow.UsersBox[ChatSelected].Items.Clear();
+                ChatControl.ChatBox[ChatSelected].Items.Clear();
+                for (int i = 0; i < authors.Count; i++)
+                    if (authors[i] != string.Empty && texts[i] != string.Empty)
+                        ChatControl.ChatBox[ChatSelected].Items.Add(authors[i] + ": " + texts[i]);
+
+                ChatControl.UsersBox[ChatSelected].Items.Clear();
                 foreach (string user in users)
-                    ChatWindow.UsersBox[ChatSelected].Items.Add(user);
+                    ChatControl.UsersBox[ChatSelected].Items.Add(user);
+                
             }
         }
+        private async void UpdateChatTabs()
+        {
+            if (ChatsControl.HasItems)
+            {
+                List<string> chats = new List<string>();
+                bool hasChat = false;
+
+                string chatsJson = await ApiManager.Read($"api/chat/chats");
+                chats = GetListValuesFromJson(chatsJson, "name");
+
+                foreach (string chat in chats)
+                    if (chat == ChatSelected)
+                        hasChat = true;
+
+                if (!hasChat)
+                {
+                    ChatControl chatWindow = new ChatControl(ChatsControl);
+                    chatWindow.DeleteTabItem(ChatSelected);
+                }
+            }
+        }
+        #endregion
 
         private void ExitUserItem_Click(object sender, RoutedEventArgs e)
         {
@@ -86,33 +111,29 @@ namespace Wpf
             authorizationWindow.Show();
         }
 
-        private void CreateChatItem_Click(object sender, RoutedEventArgs e)
-        {
-            ChatWindow creatingWindow = new ChatWindow(ChatsControl);
-
-            creatingWindow.Show();
-        }
-
         private static string ChatSelected;
         private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
+            if (ChatsControl.SelectedItem != null)
+                ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
         }
 
         private void ConsoleBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                MessageBox.Show(ConsoleBox.Text);
+                string consoleLine = ConsoleBox.Text;
+
+                СonsoleManager console = new СonsoleManager(ChatsControl, consoleLine);
+                console.ExecuteCommand();
 
                 ConsoleBox.Clear();
             }
         }
-
-        private void ExpanderConsoleBox_MouseMove(object sender, MouseEventArgs e)
+        #region ToolTip info
+        private void ConsoleExpander_MouseMove(object sender, MouseEventArgs e)
         {
-            #region
-            ExpanderConsoleBox.ToolTip = @"
+            ConsoleExpander.ToolTip = @"
                 Комнаты:
                   •//room create { Название комнаты } — создает комнаты
                      -c закрытая комната. Только(владелец, модератор и админ) сможет добавлять/ удалять пользоватей из комнаты
@@ -140,9 +161,10 @@ namespace Wpf
             Другие:
                   •//help - выводит список доступных команд
             ";
-            #endregion
         }
+        #endregion
 
+        #region Methods converting Json to list string
         private List<string> GetListValuesFromJson(string json, string attribute)
         {
             List<string> values = new List<string>();
@@ -157,21 +179,26 @@ namespace Wpf
         }
         private string GetValueByAttribute(string jsonLine, string attribute)
         {
-            List<string> words = new List<string>();
-            string value = "";
+            string value = string.Empty;
 
-            jsonLine = jsonLine.Trim(new char[] { '{', '}' });
-            string[] symbolWords = Regex.Split(jsonLine, "\"");
+            if (jsonLine != "")
+            {
+                List<string> words = new List<string>();
 
-            for (int i = 0; i < symbolWords.Length; i++)
-                if (symbolWords[i] != ":" && symbolWords[i] != ":null," && symbolWords[i] != "," && symbolWords[i] != "")
-                    words.Add(symbolWords[i]);
+                jsonLine = jsonLine.Trim(new char[] { '{', '}' });
+                string[] symbolWords = Regex.Split(jsonLine, "\"");
 
-            for (int i = 0; i < words.Count; i++)
-                if (words[i] == attribute && words[i + 1] != "message" && words[i + 1] != "userNames")
-                    value = words[++i];
+                for (int i = 0; i < symbolWords.Length; i++)
+                    if (symbolWords[i] != ":" && symbolWords[i] != ":null," && symbolWords[i] != "," && symbolWords[i] != "")
+                        words.Add(symbolWords[i]);
+
+                for (int i = 0; i < words.Count; i++)
+                    if (words[i] == attribute && words[i + 1] != "message" && words[i + 1] != "userNames")
+                        value = words[++i];
+            }
 
             return value;
         }
+        #endregion
     }
 }

@@ -85,30 +85,15 @@ namespace WebApi.Migrations
 
             modelBuilder.Entity("WebApi.Models.UserChat", b =>
                 {
-                    b.Property<int>("ChatsId");
+                    b.Property<int>("ChatId");
 
                     b.Property<int>("UserId");
 
-                    b.HasKey("ChatsId", "UserId");
+                    b.HasKey("ChatId", "UserId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("UserChat");
-                });
-
-            modelBuilder.Entity("WebApi.Models.UsersInChats", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("ChatName");
-
-                    b.Property<string>("UserName");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UsersInChats");
                 });
 
             modelBuilder.Entity("WebApi.Models.Message", b =>
@@ -121,9 +106,9 @@ namespace WebApi.Migrations
 
             modelBuilder.Entity("WebApi.Models.UserChat", b =>
                 {
-                    b.HasOne("WebApi.Models.Chat", "Chats")
+                    b.HasOne("WebApi.Models.Chat", "Chat")
                         .WithMany("UserChats")
-                        .HasForeignKey("ChatsId")
+                        .HasForeignKey("ChatId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("WebApi.Models.User", "User")

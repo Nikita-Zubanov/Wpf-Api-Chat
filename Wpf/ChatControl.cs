@@ -5,51 +5,50 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Wpf
 {
-    /// <summary>
-    /// Логика взаимодействия для CreatingChatWindow.xaml
-    /// </summary>
-    public partial class ChatWindow : Window
+    class ChatControl
     {
-        private TabControl ChatControl;
+        private TabControl TabControl;
+        private static Dictionary<string, TabItem> TabItems = new Dictionary<string, TabItem>();
+
         public static Dictionary<string, Button> MessageButton = new Dictionary<string, Button>();
         public static Dictionary<string, ListBox> ChatBox = new Dictionary<string, ListBox>();
         public static Dictionary<string, TextBox> TextBox = new Dictionary<string, TextBox>();
         public static Dictionary<string, ListBox> UsersBox = new Dictionary<string, ListBox>();
 
-        public ChatWindow(TabControl chatControl)
+        public ChatControl(TabControl chatControl)
         {
-            InitializeComponent();
-
-            ChatControl = chatControl;
+            TabControl = chatControl;
         }
 
-        private async void CreateButton_Click(object sender, RoutedEventArgs e)
+        public void AddTabItem(string tabName)
         {
-            string chatName = ChatNameBox.Text;
-
-            if (chatName != string.Empty)
+            if (TabItems.ContainsKey(tabName))
             {
-                ChatControl.Items.Add(CreateTabItem(chatName));
-                ChatControl.SelectedIndex = ChatControl.Items.Count - 1;
-
-                ApiManager.Create("api/chat/create", $"{{'Name':'{chatName}', 'Creator':'{User.Name}'}}");
-                ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{User.Name}'}} }}");
-                Close();
+                DeleteTabItem(tabName);
+                CreateTabItem(tabName);
             }
             else
-                MessageBox.Show("Заполнит поле!");
+                CreateTabItem(tabName);
+
+            TabControl.Items.Add(TabItems[tabName]);
+            TabControl.SelectedIndex = TabControl.Items.Count - 1;
         }
 
-        private TabItem CreateTabItem(string tabName)
+        public void DeleteTabItem(string tabName)
+        {
+            TabControl.Items.Remove(TabItems[tabName]);
+            TabItems.Remove(tabName);
+            MessageButton.Remove(tabName);
+            ChatBox.Remove(tabName);
+            TextBox.Remove(tabName);
+            UsersBox.Remove(tabName);
+        }
+
+        public void CreateTabItem(string tabName)
         {
             ChatBox.Add(tabName, new ListBox
             {
@@ -77,7 +76,8 @@ namespace Wpf
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 144
             });
-            MessageButton.Add(tabName, new Button {
+            MessageButton.Add(tabName, new Button
+            {
                 Name = tabName,
                 Content = "Отправить",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -87,6 +87,7 @@ namespace Wpf
             });
             MessageButton[tabName].Click += MainWindow.MessageButton_Click;
 
+
             Grid chatGrid = new Grid();
             chatGrid.Name = "ChatGrid";
             chatGrid.Background = Brushes.WhiteSmoke;
@@ -95,13 +96,17 @@ namespace Wpf
             chatGrid.Children.Add(UsersBox[tabName]);
             chatGrid.Children.Add(MessageButton[tabName]);
 
-            TabItem item = new TabItem();
-            item.Name = tabName;
-            item.Header = tabName;
-            item.Margin = new Thickness(-2, -2, 2, 0);
-            item.Content = chatGrid;
+            TabItems.Add(tabName, 
+                new TabItem()
+                {
+                    Name = tabName,
+                    Header = tabName,
+                    Margin = new Thickness(-2, -2, 2, 0),
+                    Content = chatGrid
+                });
 
-            return item;
+            //return item;
         }
     }
 }
+

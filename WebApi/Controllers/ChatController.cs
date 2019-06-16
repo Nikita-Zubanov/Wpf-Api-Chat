@@ -20,12 +20,18 @@ namespace WebApi.Controllers
         {
             ChatContext.Create(chat);
         }
+        
+        [HttpDelete("{chatName}/{userName}")]
+        public void Delete(string chatName, string userName)
+        {
+            ChatContext.Delete(chatName, userName);
+        }
 
         [Route("message")]
         [HttpPost]
-        public void AddMessage([FromBody] Message value)
+        public void AddMessage([FromBody] Message message)
         {
-            ChatContext.AddMessage(value);
+            ChatContext.AddMessage(message);
         }
 
         [Route("user")]
@@ -35,10 +41,10 @@ namespace WebApi.Controllers
             ChatContext.AddUser(userChat);
         }
 
-        [HttpGet("{Name}")]
-        public ActionResult<IEnumerable<Message>> GetChat(string name)
+        [HttpGet("messages/{Name}")]
+        public ActionResult<IEnumerable<Message>> GetMessages(string name)
         {
-            return ChatContext.GetChat(name);
+            return ChatContext.GetMessages(name);
         }
         
         [HttpGet("users/{Name}")]
@@ -47,21 +53,13 @@ namespace WebApi.Controllers
             return ChatContext.GetUsers(name);
         }
 
-        /*
-         *  Для Postman'а
-         */
-        [Route("getMessages")]
-        [HttpGet]
-        public ActionResult<IEnumerable<Message>> GetMessages()
-        {
-            return ChatContext.GetMessages();
-        }
-
-        [Route("getChats")]
+        #region Methods for "postman"
+        [Route("chats")]
         [HttpGet]
         public ActionResult<IEnumerable<Chat>> GetChats()
         {
             return ChatContext.GetChats();
         }
+        #endregion
     }
 }

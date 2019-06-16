@@ -4,15 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wpf"
-        mc:Ignorable="d"
-        Title="AuthorizationWindow" Height="450" Width="800">
-    <Grid>
-        <TextBox x:Name="UserNameBox" HorizontalAlignment="Left" Height="23" Margin="93,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        mc:Ignorable="d" Height="200" Width="360">
+    <Grid Margin="50,20,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="237" Height="110">
+        <TextBox x:Name="UserNameBox" HorizontalAlignment="Left" Height="23" Margin="93,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="122"/>
         <Label x:Name="UserNameLable" Content="Имя:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="23" Width="78"/>
-        <TextBox x:Name="UserPasswordBox" HorizontalAlignment="Left" Height="23" Margin="93,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="UserPasswordBox" HorizontalAlignment="Left" Height="23" Margin="93,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="122"/>
         <Label x:Name="UserPasswordLable" Content="Пароль:" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" Height="23" Width="78"/>
-        <Button x:Name="AuthorizeButton" Content="Войти" HorizontalAlignment="Left" Margin="13,80,0,0" VerticalAlignment="Top" Width="75" Click="AuthorizeButton_Click"/>
-        <Button x:Name="RegisterButton" Content="Зарегестрироваться" HorizontalAlignment="Left" Margin="93,80,0,0" VerticalAlignment="Top" Width="120" Click="RegisterButton_Click"/>
+        <Button x:Name="AuthorizeButton" Content="Войти" HorizontalAlignment="Left" Margin="16,80,0,0" VerticalAlignment="Top" Width="72" Click="AuthorizeButton_Click"/>
+        <Button x:Name="RegisterButton" Content="Зарегестрироваться" HorizontalAlignment="Left" Margin="93,80,0,0" VerticalAlignment="Top" Width="122" Click="RegisterButton_Click"/>
 
     </Grid>
 </Window>

@@ -41,13 +41,12 @@ namespace WebApi.Controllers
             return UsersContext.IsRegistred(name, password);
         }
 
-        /*
-         *  Для Postman'а
-         */
+        #region Methods for "postman"
         [HttpGet]
         public ActionResult<IEnumerable<User>> Get()
         {
             return UsersContext.GetUsers();
         }
+        #endregion
     }
 }
