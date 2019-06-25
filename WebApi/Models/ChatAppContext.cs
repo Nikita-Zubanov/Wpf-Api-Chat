@@ -11,6 +11,7 @@ namespace WebApi.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<BannedUserChat> BannedUserChats { get; set; }
 
         public ChatAppContext()
         {
@@ -27,7 +28,7 @@ namespace WebApi.Models
             modelBuilder.Entity<User>().HasData(
                 new User[]
                 {
-                new User { Id = 1, Name = "admin", Password = "admin", Role = "admin", Status = "Online" }
+                new User { Id = 1, Name = "admin", Password = "admin", Role = "administrator", Status = "Online" }
                 });
             base.OnModelCreating(modelBuilder);
 
@@ -41,11 +42,22 @@ namespace WebApi.Models
                 .HasOne(uc => uc.User)
                 .WithMany(u => u.UserChats)
                 .HasForeignKey(uc => uc.UserId);
-            
+            //modelBuilder.Entity<UserChat>()
+            //    .Ignore(uc => uc.BanEndDate);
+
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Chat)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ChatId);
+
+            //modelBuilder.Entity<BannedUserChat>()
+            //    .HasOne(buc => buc.Chat)
+            //    .WithMany(c => c.BannedUserChats)
+            //    .HasForeignKey(buc => buc.ChatId);
+            modelBuilder.Ignore<BannedUserChat>();
+            //modelBuilder.Entity<BannedUserChat>()
+            //    .Ignore(buc => buc.BanEndDate)
+            //    .Ignore(buc => buc.UserName);
         }
         #region Authorization methods
         public void LoginOrLogout(User user, string status)
@@ -121,7 +133,7 @@ namespace WebApi.Models
         #endregion
 
         #region UserChat and Message methods
-        public void AddMessage(Message message)
+        public void AddMessageToChat(Message message)
         {
             if (IsUserInChat(message.ChatName, message.Author))
                 using (ChatAppContext db = new ChatAppContext())
@@ -135,13 +147,13 @@ namespace WebApi.Models
                 }
         }
 
-        public void AddUser(UserChat userChat)
+        public void AddUserToChat(UserChat userChat)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
                 Chat chat = db.Chats.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.Chat.Name);
                 User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userChat.User.Name);
-                UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id };
+                UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id, BanEndDate = new DateTime() };
 
                 if (user.UserChats.Select(uc => uc.ChatId).FirstOrDefault() != newUserChat.ChatId)
                 {
@@ -150,6 +162,55 @@ namespace WebApi.Models
 
                     db.SaveChanges();
                 }
+            }
+        }
+
+        public void BanUserToChat(string chatName, string userName, string userBannedName, double time)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userName);
+                Chat chat = db.Chats.Include(s => s.UserChats).FirstOrDefault(s => s.Name == chatName);
+
+                if (chat.Creator == user.Name || user.Role == "administrator" || user.Name == "moderator")
+                {
+                    //Chat chatBanned = db.Chats.Include(s => s.BannedUserChats).FirstOrDefault(s => s.Name == chatName);
+                    //BannedUserChat newBannedUserChat = new BannedUserChat
+                    //{
+                    //    UserName = disabledUserName,
+                    //    BanEndDate = DateTime.Now.AddMinutes(time)
+                    //};
+
+                    //chatBanned.BannedUserChats.Add(newBannedUserChat);
+
+                    User userBanned = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userBannedName);
+                    UserChat userChat = userBanned.UserChats.Where(uc => uc.ChatId == chat.Id && uc.UserId == userBanned.Id).FirstOrDefault();
+                    
+                    userChat.BanEndDate = DateTime.Now.AddMinutes(time);
+
+                    //User userBanned = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == disabledUserName);
+                    //UserChat userChat = userBanned.UserChats.Where(uc => uc.ChatId == chat.Id && uc.UserId == userBanned.Id).FirstOrDefault();
+
+                    //userBanned.UserChats.Remove(userChat);
+
+                    db.SaveChanges();
+                }
+            }
+        }
+
+        public void RemoveUserFromChat(string chatName, string userName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userName);
+                Chat chat = db.Chats.Include(s => s.UserChats).FirstOrDefault(s => s.Name == chatName);
+                
+                    UserChat userChat = user.UserChats.Where(uc => uc.ChatId == chat.Id && uc.UserId == user.Id).FirstOrDefault();
+
+                    chat.UserChats.Remove(userChat);
+                    user.UserChats.Remove(userChat);
+
+                    db.SaveChanges();
             }
         }
 
@@ -194,8 +255,29 @@ namespace WebApi.Models
 
             return false;
         }
+
+        public bool IsUserBanned(string chatName, string userName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                Chat chat = db.Chats.Include(u => u.UserChats).FirstOrDefault(c => c.Name == chatName);
+                User user = db.Users.Include(u => u.UserChats).FirstOrDefault(c => c.Name == userName);
+                UserChat userChat = chat.UserChats.Where(uc => uc.ChatId == chat.Id && uc.UserId == user.Id).FirstOrDefault();
+                //BannedUserChat allBannedUserChat = db.BannedUserChats.Where(buc => buc.Chat.Name == chatName && buc.UserName == userName).FirstOrDefault();
+                if (userChat != null)
+                {
+                    //BannedUserChat bannedUserChat = db.BannedUserChats.Where(buc => buc.ChatId == chat.Id && buc.UserName == userName).FirstOrDefault();
+                    if (userChat.BanEndDate > DateTime.Now)
+                        return true;
+
+                    db.SaveChanges();
+                }
+
+                return false;
+            }
+        }
         #endregion
-        
+
         #region Methods for "postman"
         public List<User> GetUsers()
         {

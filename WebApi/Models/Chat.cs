@@ -13,5 +13,6 @@ namespace WebApi.Models
 
         public virtual ICollection<UserChat> UserChats { get; set; }
         public virtual ICollection<Message> Messages { get; set; }
+        //public virtual ICollection<BannedUserChat> BannedUserChats { get; set; }
     }
 }

@@ -24,7 +24,10 @@ namespace Wpf
                 { "object", "" },
                 { "action", "" },
                 { "objectName", "" },
-                { "specialCommand", "" }
+                { "specialCommand", "" },
+                { "valueSpecialCommand", "" },
+                { "secondSpecialCommand", "" },
+                { "secondValueSpecialCommand", "" },
             };
             
         }
@@ -44,6 +47,9 @@ namespace Wpf
                 case "connect":
                     Connect();
                     break;
+                case "disconnect":
+                    Disconnect();
+                    break;
                 default:
                     MessageBox.Show("Неизвестная команда");
                     break;
@@ -55,10 +61,15 @@ namespace Wpf
             switch (Command["object"]) {
                 case "room":
                     ChatControl chatWindow = new ChatControl(ChatControl);
+                    MainWindow mainWindow = new MainWindow();
+                    
+                    await ApiManager.Create("api/chat/create", $"{{'Name':'{Command["objectName"]}', 'Creator':'{User.Name}'}}");
+                    await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{Command["objectName"]}'}}, 'User':{{'Name':'{User.Name}'}} }}");
+
                     chatWindow.AddTabItem(Command["objectName"]);
 
-                    await ApiManager.Create("api/chat/create", $"{{'Name':'{Command["objectName"]}', 'Creator':'{User.Name}'}}");
-                    ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{Command["objectName"]}'}}, 'User':{{'Name':'{User.Name}'}} }}");
+                    mainWindow.UpdateUsersBox();
+                    mainWindow.AddUserToChat(Command["objectName"]);
 
                     break;
                 default:
@@ -66,36 +77,106 @@ namespace Wpf
                     break;
             }
         }
+
         private void Delete()
         {
             switch (Command["object"])
             {
                 case "room":
                     ChatControl chatWindow = new ChatControl(ChatControl);
+                    
+                    ApiManager.Delete("api/chat", $"deleteChat/{Command["objectName"]}/{User.Name}");
+
                     chatWindow.DeleteTabItem(Command["objectName"]);
 
-                    ApiManager.Delete("api/chat", $"{Command["objectName"]}/{User.Name}");
                     break;
                 default:
                     MessageBox.Show("Неизвестный объект");
                     break;
             }
         }
-        private void Connect()
+
+        private async void Connect()
         {
             switch (Command["object"])
             {
                 case "room":
-                    ChatControl chatWindow = new ChatControl(ChatControl);
-                    chatWindow.AddTabItem(Command["objectName"]);
-                    
-                    ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{Command["objectName"]}'}}, 'User':{{'Name':'{User.Name}'}} }}");
+                    bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/{Command["objectName"]}/{User.Name}"));
+                    if (!isBanned)
+                    {
+                        ChatControl chatWindow = new ChatControl(ChatControl);
+                        MainWindow mainWindow = new MainWindow();
+
+                        await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{Command["objectName"]}'}}, 'User':{{'Name':'{User.Name}'}} }}");
+
+                        chatWindow.AddTabItem(Command["objectName"]);
+
+                        mainWindow.UpdateUsersBox();
+                        mainWindow.AddUserToChat(Command["objectName"]);
+                    }
+                    else
+                        MessageBox.Show("Вы на время забанены в этом чате.");
 
                     break;
                 default:
-                    MessageBox.Show("Неизвестный объект");
+                    MessageBox.Show("Неизвестный объект.");
                     break;
             }
+        }
+        
+        private async void Disconnect()
+        {
+            if (Command["object"] == "room")
+            {
+                if ()
+                string chatName = "";
+
+                if (Command["objectName"] == string.Empty)
+                    chatName = ChatSelected;
+                else
+                    chatName = Command["objectName"];
+
+                if (chatName != string.Empty)
+                {
+                    ChatControl chatWindow = new ChatControl(ChatControl);
+                    MainWindow mainWindow = new MainWindow();
+                    string userName = User.Name;
+                    string disabledUser = "";
+                    double time = 0;
+                    
+                    if (Command["specialCommand"] != string.Empty && Command["secondSpecialCommand"] != string.Empty)
+                    {
+                        if (Command["objectName"] == string.Empty)
+                            chatName = ChatSelected;
+                        else
+                            chatName = Command["objectName"];
+
+                        //disabledUser = Command["valueSpecialCommand"];
+                        time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
+                        userName = Command["valueSpecialCommand"];
+
+                        await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{User.Name}/{userName}/{time}");
+
+                        //chatWindow.DeleteTabItem(chatName);
+
+                        mainWindow.BanUserToChat(chatName, userName);
+                    }
+                    else
+                    {
+
+
+                        await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{User.Name}");
+
+                        chatWindow.DeleteTabItem(chatName);
+
+                        mainWindow.RemoveUserFromChat(chatName, userName);
+                    }
+                }
+                else
+                    MessageBox.Show("Вы ввели несуществующее имя или не подключились к чату.");
+            }
+            else
+                MessageBox.Show("Неизвестный объект");
         }
 
         private void SetCommand()

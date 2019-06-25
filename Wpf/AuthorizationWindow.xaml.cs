@@ -42,6 +42,7 @@ namespace Wpf
                     ApiManager.Change("api/authorization/login", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
 
                     Close();
+                    mainWindow.OnConnect();
                     mainWindow.ShowDialog();
                 }
                 else
@@ -66,6 +67,7 @@ namespace Wpf
                 ApiManager.Create("api/authorization/register", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
 
                 Close();
+                mainWindow.OnConnect();
                 mainWindow.ShowDialog();
             }
             else

@@ -40,12 +40,20 @@ namespace Wpf
 
         public void DeleteTabItem(string tabName)
         {
-            TabControl.Items.Remove(TabItems[tabName]);
-            TabItems.Remove(tabName);
-            MessageButton.Remove(tabName);
-            ChatBox.Remove(tabName);
-            TextBox.Remove(tabName);
-            UsersBox.Remove(tabName);
+            if (TabItems.ContainsKey(tabName))
+            {
+                TabControl.Items.Remove(TabItems[tabName]);
+                TabItems.Remove(tabName);
+                MessageButton.Remove(tabName);
+                ChatBox.Remove(tabName);
+                TextBox.Remove(tabName);
+                UsersBox.Remove(tabName);
+            }
+        }
+
+        public static void AddUserToUserBox(string tabName, string userName)
+        {
+            UsersBox[tabName].Items.Add(userName);
         }
 
         public void CreateTabItem(string tabName)

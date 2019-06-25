@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wpf"
-        mc:Ignorable="d" Height="467.667" Width="800">
+        mc:Ignorable="d" Height="467.667" Width="800" Closed="Window_Closed">
     <Grid>
 
         <TabControl x:Name="ChatsControl" HorizontalAlignment="Left" Height="357" Margin="10,70,0,0" VerticalAlignment="Top" Width="772" SelectionChanged="ChatsControl_SelectionChanged"/>
@@ -13,7 +13,7 @@
                 <MenuItem x:Name="ExitUserItem" Header="Выйти из аккаунта" Click="ExitUserItem_Click"/>
             </MenuItem>
         </Menu>
-        <Expander x:Name="ConsoleExpander" Header="" Height="30" Margin="9,40,0,0" VerticalAlignment="Top" Width="662" Background="Transparent" ExpandDirection="Right" HorizontalAlignment="Left" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Padding="0" UseLayoutRounding="False" MouseMove="ConsoleExpander_MouseMove" ToolTip="">
+        <Expander x:Name="ConsoleExpander" Header="" Height="30" Margin="9,40,0,0" VerticalAlignment="Top" Width="691" Background="Transparent" ExpandDirection="Right" HorizontalAlignment="Left" HorizontalContentAlignment="Left" VerticalContentAlignment="Stretch" Padding="0" UseLayoutRounding="False" MouseMove="ConsoleExpander_MouseMove" ToolTip="">
             <TextBox x:Name="ConsoleBox" HorizontalAlignment="Left" Height="25" TextWrapping="Wrap" Width="750" Margin="0,0,0,2" Background="#FF3F3F46" Foreground="#FFF3F3F3" TextDecorations="{x:Null}" FontSize="14" KeyDown="ConsoleBox_KeyDown"/>
         </Expander>
         <Button x:Name="button1" Content="Button" HorizontalAlignment="Left" Margin="705,40,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
