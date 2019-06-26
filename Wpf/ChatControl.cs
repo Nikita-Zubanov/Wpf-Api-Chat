@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -56,7 +52,24 @@ namespace Wpf
             UsersBox[tabName].Items.Add(userName);
         }
 
-        public void CreateTabItem(string tabName)
+        public static bool HasUserToUsersBox(string tabName, string userName)
+        {
+            for (int i = 0; i < UsersBox[tabName].Items.Count; i++)
+                if (UsersBox[tabName].Items[i].ToString() == userName)
+                    return true;
+
+            return false;
+        }
+
+        public static bool HasTabItemToDictionary(string tabName)
+        {
+            if (TabItems.ContainsKey(tabName))
+                return true;
+
+            return false;
+        }
+
+        private void CreateTabItem(string tabName)
         {
             ChatBox.Add(tabName, new ListBox
             {
@@ -104,7 +117,7 @@ namespace Wpf
             chatGrid.Children.Add(UsersBox[tabName]);
             chatGrid.Children.Add(MessageButton[tabName]);
 
-            TabItems.Add(tabName, 
+            TabItems.Add(tabName,
                 new TabItem()
                 {
                     Name = tabName,
@@ -112,9 +125,6 @@ namespace Wpf
                     Margin = new Thickness(-2, -2, 2, 0),
                     Content = chatGrid
                 });
-
-            //return item;
         }
     }
 }
-

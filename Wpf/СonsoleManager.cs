@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -29,157 +27,160 @@ namespace Wpf
                 { "secondSpecialCommand", "" },
                 { "secondValueSpecialCommand", "" },
             };
-            
+
         }
 
         public void ExecuteCommand()
         {
-            SetCommand();
+            WriteConsoleLineToCommand();
 
+            switch (Command["object"])
+            {
+                case "room":
+                    RoomAction();
+
+                    break;
+                default:
+                    MessageBox.Show("Неизвестный объект команды.");
+                    break;
+            }
+        }
+
+        private void RoomAction()
+        {
             switch (Command["action"])
             {
                 case "create":
                     Create();
+
                     break;
                 case "remove":
                     Delete();
+
                     break;
                 case "connect":
                     Connect();
+
                     break;
                 case "disconnect":
-                    Disconnect();
+                    if (Command["specialCommand"] == string.Empty)
+                        Disconnect();
+                    else
+                        Ban();
+
                     break;
                 default:
-                    MessageBox.Show("Неизвестная команда");
+                    MessageBox.Show("Некорректная команда.");
                     break;
             }
         }
-
         private async void Create()
         {
-            switch (Command["object"]) {
-                case "room":
-                    ChatControl chatWindow = new ChatControl(ChatControl);
-                    MainWindow mainWindow = new MainWindow();
-                    
-                    await ApiManager.Create("api/chat/create", $"{{'Name':'{Command["objectName"]}', 'Creator':'{User.Name}'}}");
-                    await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{Command["objectName"]}'}}, 'User':{{'Name':'{User.Name}'}} }}");
+            if (Command["objectName"] != string.Empty)
+            {
+                ChatControl chatWindow = new ChatControl(ChatControl);
+                MainWindow mainWindow = new MainWindow();
+                string chatName = Command["objectName"];
+                string userName = User.Name;
 
-                    chatWindow.AddTabItem(Command["objectName"]);
+                await ApiManager.Create("api/chat/create", $"{{'Name':'{chatName}', 'Creator':'{userName}'}}");
+                await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
 
-                    mainWindow.UpdateUsersBox();
-                    mainWindow.AddUserToChat(Command["objectName"]);
+                chatWindow.AddTabItem(chatName);
+                mainWindow.UpdateUsersBox();
 
-                    break;
-                default:
-                    MessageBox.Show("Неизвестный объект");
-                    break;
+                mainWindow.AddUserToChat(chatName, userName);
             }
+            else
+                MessageBox.Show("Некорректное имя.");
         }
-
         private void Delete()
         {
-            switch (Command["object"])
+            ChatControl chatWindow = new ChatControl(ChatControl);
+            string chatName = Command["objectName"];
+            string userName = User.Name;
+
+            if (chatName != string.Empty)
             {
-                case "room":
-                    ChatControl chatWindow = new ChatControl(ChatControl);
-                    
-                    ApiManager.Delete("api/chat", $"deleteChat/{Command["objectName"]}/{User.Name}");
+                ApiManager.Delete("api/chat", $"deleteChat/{chatName}/{userName}");
 
-                    chatWindow.DeleteTabItem(Command["objectName"]);
-
-                    break;
-                default:
-                    MessageBox.Show("Неизвестный объект");
-                    break;
+                chatWindow.DeleteTabItem(chatName);
             }
+            else
+                MessageBox.Show("Некорректное имя.");
         }
-
         private async void Connect()
         {
-            switch (Command["object"])
+            if (Command["objectName"] != string.Empty)
             {
-                case "room":
-                    bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/{Command["objectName"]}/{User.Name}"));
-                    if (!isBanned)
-                    {
-                        ChatControl chatWindow = new ChatControl(ChatControl);
-                        MainWindow mainWindow = new MainWindow();
+                string chatName = Command["objectName"];
+                string userName = User.Name;
+                bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{chatName}/{userName}"));
 
-                        await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{Command["objectName"]}'}}, 'User':{{'Name':'{User.Name}'}} }}");
-
-                        chatWindow.AddTabItem(Command["objectName"]);
-
-                        mainWindow.UpdateUsersBox();
-                        mainWindow.AddUserToChat(Command["objectName"]);
-                    }
-                    else
-                        MessageBox.Show("Вы на время забанены в этом чате.");
-
-                    break;
-                default:
-                    MessageBox.Show("Неизвестный объект.");
-                    break;
-            }
-        }
-        
-        private async void Disconnect()
-        {
-            if (Command["object"] == "room")
-            {
-                if ()
-                string chatName = "";
-
-                if (Command["objectName"] == string.Empty)
-                    chatName = ChatSelected;
-                else
-                    chatName = Command["objectName"];
-
-                if (chatName != string.Empty)
+                if (!isBanned)
                 {
                     ChatControl chatWindow = new ChatControl(ChatControl);
                     MainWindow mainWindow = new MainWindow();
-                    string userName = User.Name;
-                    string disabledUser = "";
-                    double time = 0;
-                    
-                    if (Command["specialCommand"] != string.Empty && Command["secondSpecialCommand"] != string.Empty)
-                    {
-                        if (Command["objectName"] == string.Empty)
-                            chatName = ChatSelected;
-                        else
-                            chatName = Command["objectName"];
 
-                        //disabledUser = Command["valueSpecialCommand"];
-                        time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
-                        userName = Command["valueSpecialCommand"];
+                    await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
 
-                        await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{User.Name}/{userName}/{time}");
+                    chatWindow.AddTabItem(chatName);
+                    mainWindow.UpdateUsersBox();
 
-                        //chatWindow.DeleteTabItem(chatName);
-
-                        mainWindow.BanUserToChat(chatName, userName);
-                    }
-                    else
-                    {
-
-
-                        await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{User.Name}");
-
-                        chatWindow.DeleteTabItem(chatName);
-
-                        mainWindow.RemoveUserFromChat(chatName, userName);
-                    }
+                    mainWindow.AddUserToChat(chatName, userName);
                 }
                 else
-                    MessageBox.Show("Вы ввели несуществующее имя или не подключились к чату.");
+                    MessageBox.Show("Вы на время забанены в этом чате.");
             }
             else
-                MessageBox.Show("Неизвестный объект");
+                MessageBox.Show("Некорректное имя.");
+        }
+        private async void Disconnect()
+        {
+            ChatControl chatWindow = new ChatControl(ChatControl);
+            MainWindow mainWindow = new MainWindow();
+            string chatName = Command["objectName"];
+            string userName = User.Name;
+
+            if (chatName == string.Empty)
+                chatName = ChatSelected;
+
+            await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{userName}");
+
+            chatWindow.DeleteTabItem(chatName);
+
+            mainWindow.RemoveUserFromChat(chatName, userName);
+        }
+        private async void Ban()
+        {
+            if (Command["specialCommand"] == "-l" &&
+                Command["valueSpecialCommand"] != string.Empty &&
+                Command["secondSpecialCommand"] == "-m" &&
+                Command["secondValueSpecialCommand"] != string.Empty &&
+                Command["objectName"] != string.Empty)
+            {
+                string chatName = Command["objectName"];
+                string userName = User.Name;
+                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserHasRights/{chatName}/{userName}"));
+
+                if (hasRight)
+                {
+                    MainWindow mainWindow = new MainWindow();
+                    double time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
+                    string userBannedName = Command["valueSpecialCommand"];
+                    
+                    await ApiManager.Change($"api/chat/banUserToChat/{time}", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userBannedName}'}} }}");
+
+                    mainWindow.BanUserToChat(chatName, userBannedName);
+                }
+                else
+                    MessageBox.Show("У вас нет прав на это действие.");
+            }
+            else
+                MessageBox.Show("Некорректное(-ая) имя/команда или отсутствует подключение к чату.");
         }
 
-        private void SetCommand()
+        private void WriteConsoleLineToCommand()
         {
             string command = ConsoleLine;
             string[] words = Regex.Split(command, " ");

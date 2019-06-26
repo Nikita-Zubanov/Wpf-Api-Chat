@@ -1,25 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Json;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace Wpf
 {
-    /// <summary>
-    /// Логика взаимодействия для AuthorizationWindow.xaml
-    /// </summary>
     public partial class AuthorizationWindow : Window
     {
         public AuthorizationWindow()
@@ -34,15 +17,15 @@ namespace Wpf
 
             if (User.Name != string.Empty && User.Password != string.Empty)
             {
-                MainWindow mainWindow = new MainWindow();
-
                 bool isRegistred = Convert.ToBoolean(await ApiManager.Read($"api/authorization/{User.Name}/{User.Password}"));
                 if (isRegistred)
                 {
+                    MainWindow mainWindow = new MainWindow();
+
                     ApiManager.Change("api/authorization/login", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
+                    mainWindow.OnConnect();
 
                     Close();
-                    mainWindow.OnConnect();
                     mainWindow.ShowDialog();
                 }
                 else
@@ -65,9 +48,9 @@ namespace Wpf
                 MainWindow mainWindow = new MainWindow();
                 
                 ApiManager.Create("api/authorization/register", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
+                mainWindow.OnConnect();
 
                 Close();
-                mainWindow.OnConnect();
                 mainWindow.ShowDialog();
             }
             else

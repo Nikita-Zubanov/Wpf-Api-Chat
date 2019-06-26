@@ -8,9 +8,19 @@ namespace WebApi.Hubs
 {
     public class ChatHub : Hub
     {
-        public async Task SendMessage(string user, string message)
+        public override async Task OnConnectedAsync()
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            await base.OnConnectedAsync();
+        }
+
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task SendMessage(string chatName, string userName, string message)
+        {
+            await Clients.All.SendAsync("ReceiveMessage", chatName, userName, message);
         }
 
         public async Task AddUserToChat(string chatName, string userName)
@@ -24,19 +34,7 @@ namespace WebApi.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatName);
             await Clients.OthersInGroup(chatName).SendAsync("RemoveUser", chatName, userName);
         }
-
-        public override async Task OnConnectedAsync()
-        {
-            await base.OnConnectedAsync();
-        }
-
-        public override async Task OnDisconnectedAsync(Exception exception)
-        {
-            await base.OnDisconnectedAsync(exception);
-        }
-
-
-
+        
         public async Task BanUserToChat(string chatName, string userName)
         {
             await Clients.All.SendAsync("BanUser", chatName, userName);

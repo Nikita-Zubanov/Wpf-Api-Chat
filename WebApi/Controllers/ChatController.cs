@@ -28,11 +28,11 @@ namespace WebApi.Controllers
         {
             ChatContext.Delete(chatName, userName);
         }
-
-        [HttpDelete("removeUserFromChat/{chatName}/{userName}/{disabledUser}/{time}")]
-        public void BanUserFromChat(string chatName, string userName, string disabledUser, double time)
+        
+        [HttpPut("banUserToChat/{time}")] 
+        public void BanUserToChat([FromBody] UserChat userChat, double time)
         {
-            ChatContext.BanUserToChat(chatName, userName, disabledUser, time);
+            ChatContext.BanUserToChat(userChat, time);
         }
 
         [HttpDelete("removeUserFromChat/{chatName}/{userName}")]
@@ -66,11 +66,17 @@ namespace WebApi.Controllers
         {
             return ChatContext.GetUsers(name);
         }
-
-        [HttpGet("{chatName}/{userName}")]
+        
+        [HttpGet("isUserBanned/{chatName}/{userName}")]
         public ActionResult<bool> IsUserBanned(string chatName, string userName)
         {
             return ChatContext.IsUserBanned(chatName, userName);
+        }
+
+        [HttpGet("isUserHasRights/{chatName}/{userName}")]
+        public ActionResult<bool> IsUserHasRights(string chatName, string userName)
+        {
+            return ChatContext.IsUserHasRights(chatName, userName);
         }
 
         #region Methods for "postman"

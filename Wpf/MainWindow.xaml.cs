@@ -1,30 +1,23 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Wpf
 {
-    /// <summary>
-    /// Логика взаимодействия для MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        static HubConnection connection;
+        public static HubConnection connection;
+        public static string ChatSelected;
+
+        private const string urlSignalR = "http://localhost:58269/";
+        private const string uriSignalR = "ChatHub";
 
         public MainWindow()
         {
@@ -33,123 +26,119 @@ namespace Wpf
             if (connection == null)
             {
                 connection = new HubConnectionBuilder()
-                    .WithUrl("http://localhost:58269/ChatHub")
+                    .WithUrl(urlSignalR + uriSignalR)
                     .Build();
             }
-
-            //connection.Closed += async (error) =>
-            //{
-            //    await Task.Delay(new Random().Next(0, 5) * 1000);
-            //    await connection.StartAsync();
-            //};
-
-
-            //Thread secondThread = new Thread(SecondThread);
-            //secondThread.Start();
         }
-
-        public async static void MessageButton_Click(object sender, EventArgs e)
+        
+        #region SignalRMethods
+        public async void OnConnect()
         {
-            MainWindow mainWindow = new MainWindow();
-
-            mainWindow.Send();
-
-            if (ChatControl.TextBox[ChatSelected].Text != string.Empty)
-                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"{User.Name}\",\"Text\":\"{ChatControl.TextBox[ChatSelected].Text}\"}}");
-
-            ChatControl.TextBox[ChatSelected].Clear();
-        }
-
-        #region Methods update boxes and chat tabs. For debudding using button, not thread
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            Thread secondThread = new Thread(SecondThread);
-            secondThread.Start();
-        }
-        private async void SecondThread()
-        {
-            await Dispatcher.BeginInvoke((Action)(() => UpdateChatTabs()));
-            Dispatcher.BeginInvoke((Action)(() => UpdateListBoxes()));
-
-            Thread.Sleep(300);
-            //SecondThread();
-        }
-        public async void UpdateUsersBox()
-        {
-            if (ChatSelected != null)
+            connection.On<string, string, string>("ReceiveMessage", (chatName, userName, message) =>
             {
-                List<string> users = new List<string>();
-
-                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
-
-                users = GetListValuesFromJson(usersJson, "name");
-
-                ChatControl.UsersBox[ChatSelected].Items.Clear();
-                foreach (string user in users)
-                    ChatControl.UsersBox[ChatSelected].Items.Add(user);
-            }
-        }
-        private async void UpdateListBoxes()
-        {
-            //if (chatControl.SelectedItem != null)
-            //{
-                List<string> users = new List<string>();
-                List<string> authors = new List<string>();
-                List<string> texts = new List<string>();
-                
-                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
-                string messagesJson = await ApiManager.Read($"api/chat/messages/{ChatSelected}");
-                
-                users = GetListValuesFromJson(usersJson, "name");
-                authors = GetListValuesFromJson(messagesJson, "author");
-                texts = GetListValuesFromJson(messagesJson, "text");
-
-                ChatControl.ChatBox[ChatSelected].Items.Clear();
-                for (int i = 0; i < authors.Count; i++)
-                    if (authors[i] != string.Empty && texts[i] != string.Empty)
-                        ChatControl.ChatBox[ChatSelected].Items.Add(authors[i] + ": " + texts[i]);
-
-                ChatControl.UsersBox[ChatSelected].Items.Clear();
-                foreach (string user in users)
-                    ChatControl.UsersBox[ChatSelected].Items.Add(user);
-                
-            //}
-        }
-        private async void UpdateChatTabs()
-        {
-            if (ChatsControl.HasItems)
-            {
-                List<string> chats = new List<string>();
-                bool hasChat = false;
-
-                string chatsJson = await ApiManager.Read($"api/chat/chats");
-                chats = GetListValuesFromJson(chatsJson, "name");
-
-                foreach (string chat in chats)
-                    if (chat == ChatSelected)
-                        hasChat = true;
-
-                if (!hasChat)
+                Dispatcher.Invoke(() =>
                 {
-                    ChatControl chatWindow = new ChatControl(ChatsControl);
-                    chatWindow.DeleteTabItem(ChatSelected);
-                }
-            }
+                    string newMessage = $"{userName}: {message}";
+                    if (ChatControl.ChatBox.Count != 0)
+                        if (ChatControl.HasTabItemToDictionary(chatName))
+                            ChatControl.ChatBox[chatName].Items.Add(newMessage);
+                });
+            });
+            connection.On<string, string>("ReceiveUser", (chatName, userName) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (ChatControl.UsersBox.Count != 0)
+                        if (!ChatControl.HasUserToUsersBox(chatName, userName))
+                            ChatControl.UsersBox[chatName].Items.Add(userName);
+                });
+            });
+            connection.On<string, string>("RemoveUser", (chatName, userName) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateUsersBox();
+                });
+            });
+            connection.On<string, string>("BanUser", (chatName, userName) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (User.Name == userName)
+                    {
+                        ChatControl chatWindow = new ChatControl(ChatsControl);
+                        chatWindow.DeleteTabItem(chatName);
+                    }
+                });
+            });
+
+            await connection.StartAsync();
+        }
+        public async Task OnDisconnect()
+        {
+            await connection.StopAsync();
+            connection = null;
+        }
+
+        public async void SendMessage(string chatName, string userName, string message)
+        {
+            await connection.InvokeAsync("SendMessage", chatName, userName, message);
+        }
+
+        public async void AddUserToChat(string chatName, string userName)
+        {
+            await connection.InvokeAsync("AddUserToChat", chatName, userName);
+        }
+
+        public async void RemoveUserFromChat(string chatName, string userName)
+        {
+            await connection.InvokeAsync("RemoveUserFromChat", chatName, userName);
+        }
+
+        public async void BanUserToChat(string chatName, string userName)
+        {
+            await connection.InvokeAsync("BanUserToChat", chatName, userName);
         }
         #endregion
-
-        private async void ExitUserItem_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        public static string ChatSelected;
+        
         private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ChatsControl.SelectedItem != null)
                 ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
         }
 
+        public static void MessageButton_Click(object sender, EventArgs e)
+        {
+            MainWindow mainWindow = new MainWindow();
+            string chatName = ChatSelected;
+            string userName = User.Name;
+            string message = ChatControl.TextBox[ChatSelected].Text;
+
+            if (message != string.Empty)
+            {
+                mainWindow.SendMessage(chatName, userName, message);
+                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{chatName}\",\"Author\":\"{userName}\",\"Text\":\"{message}\"}}");
+            }
+
+            ChatControl.TextBox[chatName].Clear();
+        }
+        
+        private async void Window_Closed(object sender, EventArgs e)
+        {
+            AuthorizationWindow authorizationWindow = new AuthorizationWindow();
+
+            await ApiManager.Change($"api/authorization/logout", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
+            OnDisconnect();
+
+            Close();
+            authorizationWindow.Show();
+        }
+
+        private void ExitUserItem_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+        
         private void ConsoleBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -162,6 +151,22 @@ namespace Wpf
                 ConsoleBox.Clear();
             }
         }
+
+        public async void UpdateUsersBox()
+        {
+            if (ChatSelected != null)
+            {
+                List<string> users = new List<string>();
+
+                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
+                users = GetListValuesFromJson(usersJson, "name");
+
+                ChatControl.UsersBox[ChatSelected].Items.Clear();
+                foreach (string user in users)
+                    ChatControl.UsersBox[ChatSelected].Items.Add(user);
+            }
+        }
+
         #region ToolTip info
         private void ConsoleExpander_MouseMove(object sender, MouseEventArgs e)
         {
@@ -195,7 +200,7 @@ namespace Wpf
             ";
         }
         #endregion
-
+        
         #region Methods converting Json to list string
         private List<string> GetListValuesFromJson(string json, string attribute)
         {
@@ -230,88 +235,6 @@ namespace Wpf
             }
 
             return value;
-        }
-        #endregion
-
-        #region SignalRMethods
-        public async void Send()
-        {
-            await connection.InvokeAsync("SendMessage", User.Name, ChatControl.TextBox[ChatSelected].Text);
-        }
-
-        public async void OnConnect()
-        {
-            connection.On<string, string>("ReceiveMessage", (user, message) =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    var newMessage = $"{user}: {message}";
-                    if (ChatControl.ChatBox.Count != 0)
-                        ChatControl.ChatBox[ChatSelected].Items.Add(newMessage);
-                });
-            });
-            connection.On<string, string>("ReceiveUser", (chatName, userName) =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    var newUser = $"{userName}";
-                    if (ChatControl.UsersBox.Count != 0)
-                        ChatControl.UsersBox[chatName].Items.Add(newUser);
-                });
-            });
-            connection.On<string, string>("RemoveUser", (chatName, userName) =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    UpdateUsersBox();
-                });
-            });
-            connection.On<string, string>("BanUser", (chatName, userName) =>
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    var userBanned = $"{userName}";
-                    if (User.Name == userName)
-                    {
-                        ChatControl chatWindow = new ChatControl(ChatsControl);
-                        chatWindow.DeleteTabItem(chatName);
-                    }
-                });
-            });
-
-
-            await connection.StartAsync();
-        }
-        public async Task OnDisconnect()
-        {
-            await connection.StopAsync();
-            connection = null;
-        }
-
-        public async void AddUserToChat(string chatName)
-        {
-            await connection.InvokeAsync("AddUserToChat", chatName, User.Name);
-        }
-
-        public async void RemoveUserFromChat(string chatName, string userName)
-        {
-            await connection.InvokeAsync("RemoveUserFromChat", chatName, userName);
-        }
-
-        public async void BanUserToChat(string chatName, string userName)
-        {
-            await connection.InvokeAsync("BanUserToChat", chatName, userName);
-        }
-
-        private async void Window_Closed(object sender, EventArgs e)
-        {
-            AuthorizationWindow authorizationWindow = new AuthorizationWindow();
-
-            await ApiManager.Change($"api/authorization/logout", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
-
-            OnDisconnect();
-            Close();
-            authorizationWindow.Show();
         }
         #endregion
     }

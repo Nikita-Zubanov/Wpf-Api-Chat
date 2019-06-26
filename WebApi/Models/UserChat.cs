@@ -12,7 +12,7 @@ namespace WebApi.Models
 
         public int ChatId { get; set; }
         public virtual Chat Chat { get; set; }
-        
+
         public DateTime BanEndDate { get; set; }
     }
 }
