@@ -16,31 +16,22 @@ namespace WebApi.Controllers
     {
         private static readonly ChatAppContext ChatContext = new ChatAppContext();
 
+        #region Chat CRUD-actions
         [Route("create")]
         [HttpPost]
         public void CreateChat([FromBody] Chat chat)
         {
             ChatContext.Create(chat);
         }
-        
+
         [HttpDelete("deleteChat/{chatName}/{userName}")]
         public void DeleteChat(string chatName, string userName)
         {
             ChatContext.Delete(chatName, userName);
         }
+        #endregion
         
-        [HttpPut("banUserToChat/{time}")] 
-        public void BanUserToChat([FromBody] UserChat userChat, double time)
-        {
-            ChatContext.BanUserToChat(userChat, time);
-        }
-
-        [HttpDelete("removeUserFromChat/{chatName}/{userName}")]
-        public void RemoveUserFromChat(string chatName, string userName)
-        {
-            ChatContext.RemoveUserFromChat(chatName, userName);
-        }
-
+        #region Message-actions
         [Route("message")]
         [HttpPost]
         public async Task AddMessageToChat([FromBody] Message message)
@@ -48,6 +39,28 @@ namespace WebApi.Controllers
             ChatContext.AddMessageToChat(message);
         }
 
+        [HttpGet("messages/{Name}")]
+        public ActionResult<IEnumerable<Message>> GetMessages(string name)
+        {
+            return ChatContext.GetMessages(name);
+        }
+        #endregion
+
+        #region User-actions
+        [HttpPut("renameUser/{newUserName}")]
+        public void RenameUser([FromBody] User user, string newUserName)
+        {
+            ChatContext.RenameUser(user, newUserName);
+        }
+
+        [HttpGet("users/{Name}")]
+        public ActionResult<IEnumerable<User>> GetUsers(string name)
+        {
+            return ChatContext.GetUsers(name);
+        }
+        #endregion
+
+        #region UserChat-actions
         [Route("user")]
         [HttpPost]
         public async Task AddUserToChat([FromBody] UserChat userChat)
@@ -55,36 +68,48 @@ namespace WebApi.Controllers
             ChatContext.AddUserToChat(userChat);
         }
 
-        [HttpGet("messages/{Name}")]
-        public ActionResult<IEnumerable<Message>> GetMessages(string name)
+        [HttpPut("banUserToChat/{time}")]
+        public void BanUserToChat([FromBody] UserChat userChat, double time)
         {
-            return ChatContext.GetMessages(name);
+            ChatContext.BanUserToChat(userChat, time);
         }
         
-        [HttpGet("users/{Name}")]
-        public ActionResult<IEnumerable<User>> GetUsers(string name)
+        [HttpDelete("removeUserFromChat/{chatName}/{userName}")]
+        public void RemoveUserFromChat(string chatName, string userName)
         {
-            return ChatContext.GetUsers(name);
+            ChatContext.RemoveUserFromChat(chatName, userName);
         }
-        
+        #endregion
+
+        #region Boolean-actions
         [HttpGet("isUserBanned/{chatName}/{userName}")]
         public ActionResult<bool> IsUserBanned(string chatName, string userName)
         {
             return ChatContext.IsUserBanned(chatName, userName);
         }
 
-        [HttpGet("isUserHasRights/{chatName}/{userName}")]
-        public ActionResult<bool> IsUserHasRights(string chatName, string userName)
+        [HttpGet("hasRightToChat/{chatName}/{userName}")]
+        public ActionResult<bool> HasRightToChat(string chatName, string userName)
         {
-            return ChatContext.IsUserHasRights(chatName, userName);
+            return ChatContext.HasRightToChat(chatName, userName);
         }
 
-        #region Methods for "postman"
-        [Route("chats")]
-        [HttpGet]
-        public ActionResult<IEnumerable<Chat>> GetChats()
+        [HttpGet("isUserHasRight/{userName}/{userPassword}")]
+        public ActionResult<bool> IsUserHasRight(string userName, string userPassword)
         {
-            return ChatContext.GetChats();
+            return ChatContext.IsUserHasRight(userName, userPassword);
+        }
+
+        [HttpGet("isChatExists/{chatName}")]
+        public ActionResult<bool> IsChatExists(string chatName)
+        {
+            return ChatContext.IsChatExists(chatName);
+        }
+
+        [HttpGet("isUserExists/{userName}")]
+        public ActionResult<bool> IsUserExists(string userName)
+        {
+            return ChatContext.IsUserExists(userName);
         }
         #endregion
     }

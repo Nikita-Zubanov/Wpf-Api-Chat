@@ -42,13 +42,5 @@ namespace WebApi.Controllers
         {
             return UsersContext.IsRegistred(name, password);
         }
-
-        #region Methods for "postman"
-        [HttpGet]
-        public ActionResult<IEnumerable<User>> Get()
-        {
-            return UsersContext.GetUsers();
-        }
-        #endregion
     }
 }

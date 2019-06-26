@@ -21,9 +21,10 @@ namespace Wpf
                 if (isRegistred)
                 {
                     MainWindow mainWindow = new MainWindow();
+                    SignalRManager signalRManager = new SignalRManager();
 
                     ApiManager.Change("api/authorization/login", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
-                    mainWindow.OnConnect();
+                    signalRManager.OnConnect();
 
                     Close();
                     mainWindow.ShowDialog();
@@ -38,20 +39,27 @@ namespace Wpf
                 MessageBox.Show("Заполните все поля!");
         }
 
-        private void RegisterButton_Click(object sender, RoutedEventArgs e)
+        private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             User.Name = UserNameBox.Text;
             User.Password = UserPasswordBox.Text;
 
             if (User.Name != string.Empty && User.Password != string.Empty)
             {
-                MainWindow mainWindow = new MainWindow();
-                
-                ApiManager.Create("api/authorization/register", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
-                mainWindow.OnConnect();
+                bool isUserExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserExists/{User.Name}"));
+                if (!isUserExists)
+                {
+                    MainWindow mainWindow = new MainWindow();
+                    SignalRManager signalRManager = new SignalRManager();
 
-                Close();
-                mainWindow.ShowDialog();
+                    ApiManager.Create("api/authorization/register", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
+                    signalRManager.OnConnect();
+
+                    Close();
+                    mainWindow.ShowDialog();
+                }
+                else
+                    MessageBox.Show("Пользователь с таким логином уже существует.");
             }
             else
                 MessageBox.Show("Заполните все поля!");

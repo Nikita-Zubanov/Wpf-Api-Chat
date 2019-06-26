@@ -137,6 +137,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ChatControl.cs" />
+    <Compile Include="SignalRManager.cs" />
     <Compile Include="User.cs" />
     <Compile Include="СonsoleManager.cs" />
     <Page Include="AuthorizationWindow.xaml">

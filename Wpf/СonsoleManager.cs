@@ -40,6 +40,10 @@ namespace Wpf
                     RoomAction();
 
                     break;
+                case "user":
+                    UserAction();
+
+                    break;
                 default:
                     MessageBox.Show("Неизвестный объект команды.");
                     break;
@@ -80,16 +84,23 @@ namespace Wpf
             {
                 ChatControl chatWindow = new ChatControl(ChatControl);
                 MainWindow mainWindow = new MainWindow();
+                SignalRManager signalRManager = new SignalRManager();
                 string chatName = Command["objectName"];
                 string userName = User.Name;
 
-                await ApiManager.Create("api/chat/create", $"{{'Name':'{chatName}', 'Creator':'{userName}'}}");
-                await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
+                bool isChatExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isChatExists/{chatName}"));
+                if (!isChatExists)
+                {
+                    await ApiManager.Create("api/chat/create", $"{{'Name':'{chatName}', 'Creator':'{userName}'}}");
+                    await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
 
-                chatWindow.AddTabItem(chatName);
-                mainWindow.UpdateUsersBox();
+                    chatWindow.AddTabItem(chatName);
+                    mainWindow.UpdateUsersBox();
 
-                mainWindow.AddUserToChat(chatName, userName);
+                    signalRManager.AddUserToChat(chatName, userName);
+                }
+                else
+                    MessageBox.Show("Чат с таким названием уже существует.");
             }
             else
                 MessageBox.Show("Некорректное имя.");
@@ -115,22 +126,29 @@ namespace Wpf
             {
                 string chatName = Command["objectName"];
                 string userName = User.Name;
-                bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{chatName}/{userName}"));
 
-                if (!isBanned)
+                bool isChatExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isChatExists/{chatName}"));
+                if (isChatExists)
                 {
-                    ChatControl chatWindow = new ChatControl(ChatControl);
-                    MainWindow mainWindow = new MainWindow();
+                    bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{chatName}/{userName}"));
+                    if (!isBanned)
+                    {
+                        ChatControl chatWindow = new ChatControl(ChatControl);
+                        MainWindow mainWindow = new MainWindow();
+                        SignalRManager signalRManager = new SignalRManager();
 
-                    await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
+                        await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
 
-                    chatWindow.AddTabItem(chatName);
-                    mainWindow.UpdateUsersBox();
+                        chatWindow.AddTabItem(chatName);
+                        mainWindow.UpdateUsersBox();
 
-                    mainWindow.AddUserToChat(chatName, userName);
+                        signalRManager.AddUserToChat(chatName, userName);
+                    }
+                    else
+                        MessageBox.Show("Вы на время забанены в этом чате.");
                 }
                 else
-                    MessageBox.Show("Вы на время забанены в этом чате.");
+                    MessageBox.Show("Чата с таким названием не существует.");
             }
             else
                 MessageBox.Show("Некорректное имя.");
@@ -139,6 +157,7 @@ namespace Wpf
         {
             ChatControl chatWindow = new ChatControl(ChatControl);
             MainWindow mainWindow = new MainWindow();
+            SignalRManager signalRManager = new SignalRManager();
             string chatName = Command["objectName"];
             string userName = User.Name;
 
@@ -149,7 +168,7 @@ namespace Wpf
 
             chatWindow.DeleteTabItem(chatName);
 
-            mainWindow.RemoveUserFromChat(chatName, userName);
+            signalRManager.RemoveUserFromChat(chatName, userName);
         }
         private async void Ban()
         {
@@ -161,17 +180,18 @@ namespace Wpf
             {
                 string chatName = Command["objectName"];
                 string userName = User.Name;
-                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserHasRights/{chatName}/{userName}"));
 
+                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasRightToChat/{chatName}/{userName}"));
                 if (hasRight)
                 {
                     MainWindow mainWindow = new MainWindow();
+                    SignalRManager signalRManager = new SignalRManager();
                     double time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
                     string userBannedName = Command["valueSpecialCommand"];
                     
                     await ApiManager.Change($"api/chat/banUserToChat/{time}", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userBannedName}'}} }}");
 
-                    mainWindow.BanUserToChat(chatName, userBannedName);
+                    signalRManager.BanUserToChat(chatName, userBannedName);
                 }
                 else
                     MessageBox.Show("У вас нет прав на это действие.");
@@ -180,13 +200,83 @@ namespace Wpf
                 MessageBox.Show("Некорректное(-ая) имя/команда или отсутствует подключение к чату.");
         }
 
+        private void UserAction()
+        {
+            switch (Command["action"])
+            {
+                case "rename":
+                    Rename();
+
+                    break;
+                case "ban":
+                    Delete();
+
+                    break;
+                case "moderator":
+                    Connect();
+
+                    break;
+                default:
+                    MessageBox.Show("Некорректная команда.");
+                    break;
+            }
+        }
+        private async void Rename()
+        {
+            if (Command["objectName"] != string.Empty)
+            {
+                MainWindow mainWindow = new MainWindow();
+                SignalRManager signalRManager = new SignalRManager();
+                string userName;
+                string newUserName;
+
+                if (Command["specialCommand"] == "-l" &&
+                Command["valueSpecialCommand"] != string.Empty)
+                {
+                    userName = Command["objectName"];
+                    newUserName = Command["valueSpecialCommand"];
+                }
+                else
+                {
+                    userName = User.Name;
+                    newUserName = Command["objectName"];
+                }
+
+                bool isNewUserExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserExists/{newUserName}"));
+                bool isUserExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserExists/{userName}"));
+                if (!isNewUserExists && isUserExists)
+                {
+                    bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserHasRight/{userName}/{User.Password}"));
+                    if (hasRight)
+                    {
+                        await ApiManager.Change($"api/chat/renameUser/{newUserName}", $"{{ 'Name':'{userName}' }}");
+
+                        signalRManager.UpdateUser(userName, newUserName);
+                    }
+                    else
+                        MessageBox.Show("У вас нет прав на это действие.");
+                }
+                else
+                    MessageBox.Show("Вы пытаетесь переименовать несуществующего пользователя или пользователь с предложенным логином уже существует.");
+            }
+            else
+                MessageBox.Show("Некорректное имя.");
+        }
+
         private void WriteConsoleLineToCommand()
         {
-            string command = ConsoleLine;
-            string[] words = Regex.Split(command, " ");
+            try
+            {
+                string command = ConsoleLine;
+                string[] words = Regex.Split(command, " ");
 
-            for (int i = 0; i < words.Length; i++)
-                Command[Command.ElementAt(i).Key] = words[i].ToLower();
+                for (int i = 0; i < words.Length; i++)
+                    Command[Command.ElementAt(i).Key] = words[i].ToLower();
+            }
+            catch
+            {
+                MessageBox.Show("Проверьте набранную команду.");
+            }
         }
     }
 }

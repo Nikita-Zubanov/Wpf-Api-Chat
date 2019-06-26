@@ -24,6 +24,7 @@ namespace WebApi.Models
             optionsBuilder.UseSqlServer($"Server={serverName};Database=ChatApp;Trusted_Connection=True;");
         }
 
+        #region Model-config
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasData(
@@ -49,6 +50,8 @@ namespace WebApi.Models
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ChatId);
         }
+        #endregion
+
         #region Authorization methods
         public void LoginOrLogout(User user, string status)
         {
@@ -71,19 +74,6 @@ namespace WebApi.Models
 
                 db.Users.Add(newUser);
                 db.SaveChanges();
-            }
-        }
-
-        public bool IsRegistred(string name, string password)
-        {
-            using (ChatAppContext db = new ChatAppContext())
-            {
-                User checkedUser = db.Users.FirstOrDefault(u => u.Name == name && u.Password == password);
-
-                if (checkedUser == null)
-                    return false;
-
-                return true;
             }
         }
         #endregion
@@ -212,6 +202,41 @@ namespace WebApi.Models
                 return users;
             }
         }
+        #endregion
+
+        #region User-methods
+        public void RenameUser(User user, string newUserName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User userChanged = db.Users.Where(u => u.Name == user.Name).FirstOrDefault();
+                List<Chat> chats = db.Chats.Where(c => c.Creator == user.Name).ToList();
+                List<Message> messages = db.Messages.Where(m => m.Author == user.Name).ToList();
+
+                userChanged.Name = newUserName;
+                for (int i = 0; i < chats.Count; i++)
+                    chats[i].Creator = newUserName;
+                for (int i = 0; i < messages.Count; i++)
+                    messages[i].Author = newUserName;
+
+                db.SaveChanges();
+            }
+        }
+        #endregion
+
+        #region Boolean-methods
+        public bool IsRegistred(string name, string password)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User checkedUser = db.Users.FirstOrDefault(u => u.Name == name && u.Password == password);
+
+                if (checkedUser == null)
+                    return false;
+
+                return true;
+            }
+        }
 
         private bool IsUserInChat(string chatName, string userName)
         {
@@ -239,7 +264,7 @@ namespace WebApi.Models
             }
         }
 
-        public bool IsUserHasRights(string chatName, string userName)
+        public bool HasRightToChat(string chatName, string userName)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
@@ -252,26 +277,44 @@ namespace WebApi.Models
                 return false;
             }
         }
-        #endregion
 
-        #region Methods for "postman"
-        public List<User> GetUsers()
+        public bool IsUserHasRight(string userName, string userPassword)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<User> users = db.Users.ToList();
+                User userChanged = db.Users.Where(u => u.Name == userName).FirstOrDefault();
+                User user = db.Users.Where(u => u.Password == userPassword).FirstOrDefault();
 
-                return users;
+                if (user.Role == "administrator" || userChanged.Password == userPassword)
+                    return true;
+
+                return false;
             }
         }
 
-        public List<Chat> GetChats()
+        public bool IsUserExists(string userName)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
-                List<Chat> chats = db.Chats.ToList();
+                User user = db.Users.Where(u => u.Name == userName).FirstOrDefault();
 
-                return chats;
+                if (user != null)
+                    return true;
+
+                return false;
+            }
+        }
+
+        public bool IsChatExists(string chatName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                Chat chat = db.Chats.Where(u => u.Name == chatName).FirstOrDefault();
+
+                if (chat != null)
+                    return true;
+
+                return false;
             }
         }
         #endregion
