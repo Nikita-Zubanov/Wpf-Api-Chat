@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Wpf
 {
@@ -11,6 +12,7 @@ namespace Wpf
     {
         public static HubConnection connection;
         public static MainWindow mainWindow;
+        public static TabControl ChatsControl;
 
         public const string urlSignalR = "http://localhost:58269/";
         public const string uriSignalR = "ChatHub";
@@ -46,11 +48,44 @@ namespace Wpf
                     UpdateUsersBox();
                 });
             });
+            connection.On<string, string>("ChangeChat", (oldName, newName) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    ChatControl chatWindow = new ChatControl(ChatsControl);
+
+                    if (ChatSelected == oldName)
+                        ChatSelected = newName;
+
+                    chatWindow.RenameTabItem(oldName, newName);
+                });
+            });
+            connection.On("RemoveUser", () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateUsersBox();
+                });
+            });
+            connection.On<string>("RemoveChat", (chatName) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    ChatControl chatWindow = new ChatControl(ChatsControl);
+
+                    chatWindow.DeleteTabItem(chatName);
+                });
+            });
             connection.On<string, string>("BanUser", (chatName, userName) =>
             {
                 Dispatcher.Invoke(() =>
                 {
-                    if (User.Name == userName)
+                    if (User.Name == userName && chatName == "allChats")
+                    {
+                        ChatControl chatWindow = new ChatControl(ChatsControl);
+                        chatWindow.DeleteAllTabItem();
+                    }
+                    else if (User.Name == userName)
                     {
                         ChatControl chatWindow = new ChatControl(ChatsControl);
                         chatWindow.DeleteTabItem(chatName);
@@ -81,9 +116,19 @@ namespace Wpf
             await connection.InvokeAsync("UpdateUser", oldName, newName);
         }
 
+        public async void UpdateChat(string oldName, string newName)
+        {
+            await connection.InvokeAsync("UpdateChat", oldName, newName);
+        }
+
         public async void RemoveUserFromChat(string chatName, string userName)
         {
             await connection.InvokeAsync("RemoveUserFromChat", chatName, userName);
+        }
+
+        public async void RemoveChat(string chatName)
+        {
+            await connection.InvokeAsync("RemoveChat", chatName);
         }
 
         public async void BanUserToChat(string chatName, string userName)

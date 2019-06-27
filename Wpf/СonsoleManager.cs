@@ -11,11 +11,11 @@ namespace Wpf
     {
         private readonly string ConsoleLine;
         private readonly Dictionary<string, string> Command;
-        private readonly TabControl ChatControl;
+        private readonly TabControl ChatsControl;
 
         public СonsoleManager(TabControl chatControl, string concoleLine)
         {
-            ChatControl = chatControl;
+            ChatsControl = chatControl;
             ConsoleLine = concoleLine;
             Command = new Dictionary<string, string>
             {
@@ -62,6 +62,10 @@ namespace Wpf
                     Delete();
 
                     break;
+                case "rename":
+                    RenameChat();
+
+                    break;
                 case "connect":
                     Connect();
 
@@ -70,7 +74,7 @@ namespace Wpf
                     if (Command["specialCommand"] == string.Empty)
                         Disconnect();
                     else
-                        Ban();
+                        BanToChat();
 
                     break;
                 default:
@@ -82,7 +86,7 @@ namespace Wpf
         {
             if (Command["objectName"] != string.Empty)
             {
-                ChatControl chatWindow = new ChatControl(ChatControl);
+                ChatControl chatWindow = new ChatControl(ChatsControl);
                 MainWindow mainWindow = new MainWindow();
                 SignalRManager signalRManager = new SignalRManager();
                 string chatName = Command["objectName"];
@@ -105,20 +109,54 @@ namespace Wpf
             else
                 MessageBox.Show("Некорректное имя.");
         }
-        private void Delete()
+        private async void Delete()
         {
-            ChatControl chatWindow = new ChatControl(ChatControl);
+            ChatControl chatWindow = new ChatControl(ChatsControl);
             string chatName = Command["objectName"];
-            string userName = User.Name;
-
-            if (chatName != string.Empty)
+            bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasHighRightInChat/{chatName}/{User.Name}"));
+            if (hasRight)
             {
-                ApiManager.Delete("api/chat", $"deleteChat/{chatName}/{userName}");
+                if (chatName != string.Empty)
+                {
+                    SignalRManager signalRManager = new SignalRManager();
 
-                chatWindow.DeleteTabItem(chatName);
+                    ApiManager.Delete("api/chat", $"deleteChat/{chatName}/{User.Name}");
+
+                    chatWindow.DeleteTabItem(chatName);
+
+                    signalRManager.RemoveChat(chatName);
+                }
+                else
+                    MessageBox.Show("Некорректное имя.");
             }
             else
-                MessageBox.Show("Некорректное имя.");
+                MessageBox.Show("У вас нет прав на это действие.");
+        }
+        private async void RenameChat()
+        {
+            if (Command["objectName"] != string.Empty && ChatSelected != string.Empty)
+            {
+                SignalRManager signalRManager = new SignalRManager();
+                string chatName = ChatSelected;
+                string newChatName = Command["objectName"];
+
+                bool isChatExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isChatExists/{chatName}"));
+                bool isNewChatExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isChatExists/{newChatName}"));
+                if (isChatExists && !isNewChatExists)
+                {
+                    bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasHighRightInChat/{chatName}/{User.Name}"));
+                    if (hasRight)
+                    {
+                        await ApiManager.Change($"api/chat/renameChat/{newChatName}", $"{{ 'Name':'{chatName}' }}");
+
+                        signalRManager.UpdateChat(chatName, newChatName);
+                    }
+                    else
+                        MessageBox.Show("У вас нет прав на это действие.");
+                }
+                else
+                    MessageBox.Show("У вас нет подключения к комнате или комната с предложенным названием уже существует.");
+            }
         }
         private async void Connect()
         {
@@ -133,7 +171,7 @@ namespace Wpf
                     bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{chatName}/{userName}"));
                     if (!isBanned)
                     {
-                        ChatControl chatWindow = new ChatControl(ChatControl);
+                        ChatControl chatWindow = new ChatControl(ChatsControl);
                         MainWindow mainWindow = new MainWindow();
                         SignalRManager signalRManager = new SignalRManager();
 
@@ -155,7 +193,7 @@ namespace Wpf
         }
         private async void Disconnect()
         {
-            ChatControl chatWindow = new ChatControl(ChatControl);
+            ChatControl chatWindow = new ChatControl(ChatsControl);
             MainWindow mainWindow = new MainWindow();
             SignalRManager signalRManager = new SignalRManager();
             string chatName = Command["objectName"];
@@ -163,14 +201,18 @@ namespace Wpf
 
             if (chatName == string.Empty)
                 chatName = ChatSelected;
+            if (chatName != string.Empty)
+            {
+                await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{userName}");
 
-            await ApiManager.Delete("api/chat", $"removeUserFromChat/{chatName}/{userName}");
+                chatWindow.DeleteTabItem(chatName);
 
-            chatWindow.DeleteTabItem(chatName);
-
-            signalRManager.RemoveUserFromChat(chatName, userName);
+                signalRManager.RemoveUserFromChat(chatName, userName);
+            }
+            else
+                MessageBox.Show("Подключитесь к комнате или введите корректное название.");
         }
-        private async void Ban()
+        private async void BanToChat()
         {
             if (Command["specialCommand"] == "-l" &&
                 Command["valueSpecialCommand"] != string.Empty &&
@@ -181,7 +223,7 @@ namespace Wpf
                 string chatName = Command["objectName"];
                 string userName = User.Name;
 
-                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasRightToChat/{chatName}/{userName}"));
+                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasLowRightInChat/{chatName}/{userName}"));
                 if (hasRight)
                 {
                     MainWindow mainWindow = new MainWindow();
@@ -205,15 +247,15 @@ namespace Wpf
             switch (Command["action"])
             {
                 case "rename":
-                    Rename();
+                    RenameUser();
 
                     break;
                 case "ban":
-                    Delete();
+                    BanUser();
 
                     break;
                 case "moderator":
-                    Connect();
+                    Moderator();
 
                     break;
                 default:
@@ -221,11 +263,10 @@ namespace Wpf
                     break;
             }
         }
-        private async void Rename()
+        private async void RenameUser()
         {
             if (Command["objectName"] != string.Empty)
             {
-                MainWindow mainWindow = new MainWindow();
                 SignalRManager signalRManager = new SignalRManager();
                 string userName;
                 string newUserName;
@@ -246,7 +287,7 @@ namespace Wpf
                 bool isUserExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserExists/{userName}"));
                 if (!isNewUserExists && isUserExists)
                 {
-                    bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserHasRight/{userName}/{User.Password}"));
+                    bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/isTrueUser/{userName}/{User.Password}"));
                     if (hasRight)
                     {
                         await ApiManager.Change($"api/chat/renameUser/{newUserName}", $"{{ 'Name':'{userName}' }}");
@@ -261,6 +302,54 @@ namespace Wpf
             }
             else
                 MessageBox.Show("Некорректное имя.");
+        }
+        private async void BanUser()
+        {
+            if (Command["specialCommand"] == "-m" &&
+               Command["valueSpecialCommand"] != string.Empty &&
+               Command["objectName"] != string.Empty)
+            {
+                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasLowRightInChat/allChats/{User.Name}"));
+                if (hasRight)
+                {
+                    MainWindow mainWindow = new MainWindow();
+                    SignalRManager signalRManager = new SignalRManager();
+                    double time = Convert.ToDouble(Command["valueSpecialCommand"]);
+                    string userBannedName = Command["objectName"];
+
+                    await ApiManager.Change($"api/chat/banUser/{time}", $"{{ 'Name':'{userBannedName}'}} ");
+
+                    signalRManager.BanUserToChat("allChats", userBannedName);
+                }
+                else
+                    MessageBox.Show("У вас нет прав на это действие.");
+            }
+            else
+                MessageBox.Show("Некорректное(-ая) имя/команда.");
+        }
+        private async void Moderator()
+        {
+            if ((Command["specialCommand"] == "-n" || Command["specialCommand"] == "-d") &&
+               Command["objectName"] != string.Empty)
+            {
+                SignalRManager signalRManager = new SignalRManager();
+                string moderatorName = Command["objectName"];
+                if (moderatorName != User.Name)
+                {
+                    bool isModerator = false;
+
+                    if (Command["specialCommand"] == "-n")
+                        isModerator = true;
+                    else if (Command["specialCommand"] == "-d")
+                        isModerator = false;
+
+                    await ApiManager.Change($"api/chat/changeModerator/{isModerator}", $"{{ 'Name':'{moderatorName}'}} ");
+                }
+                else
+                    MessageBox.Show("Нельзя самостоятельно назначать себя модератором.");
+            }
+            else
+                MessageBox.Show("Некорректное(-ая) имя/команда.");
         }
 
         private void WriteConsoleLineToCommand()

@@ -22,7 +22,7 @@ namespace Wpf
                 SignalRManager.connection = new HubConnectionBuilder()
                     .WithUrl(SignalRManager.urlSignalR + SignalRManager.uriSignalR)
                     .Build();
-                SignalRManager.mainWindow = new MainWindow();
+                SignalRManager.ChatsControl = ChatsControl;
             }
         }
         
@@ -114,9 +114,8 @@ namespace Wpf
                   •user rename { login пользователя } — сменить свой логи (для владелеца)
                   •user rename { login пользователя }  — переименовать другого пользователя (для владелеца и админа)
                      -l { новый login пользователя } — новый логин пользователя (для владелеца и админа)
-                  •user ban
-                    -l { login пользователя } — выгоняет пользователя из всех комнат
-                    -m { Колличество минут } — время на которое пользователь не сможет войти
+                  •user ban { login пользователя } — выгоняет пользователя из всех комнат(для модератора и админа)
+                    -m { Колличество минут } — время на которое пользователь не сможет войти(для модератора и админа)
                   •user moderator { login пользователя } — действия над модераторами
                     -n — назначить пользователя модератором
                     -d — разжаловать пользователя
@@ -125,6 +124,9 @@ namespace Wpf
                     -v — выводит колличество текущих просмотров
                     -l — выводит колличество лаqков под видео
                   •yBot help — список доступных команд для взаимодействи
+
+                Пример:
+                  room disconnect newroom -l userlogin -m 60
             ";
         }
         #endregion

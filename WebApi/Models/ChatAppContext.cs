@@ -96,17 +96,30 @@ namespace WebApi.Models
             {
                 User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userName);
                 Chat chat = db.Chats.Include(s => s.UserChats).FirstOrDefault(s => s.Name == chatName);
-                if (chat.Creator == userName)
-                {
-                    UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id };
+                List<Message> messages = db.Messages.Where(m => m.ChatId == chat.Id).ToList();
+                UserChat newUserChat = new UserChat { ChatId = chat.Id, UserId = user.Id };
 
-                    chat.UserChats.Remove(newUserChat);
-                    user.UserChats.Remove(newUserChat);
+                chat.UserChats.Remove(newUserChat);
+                user.UserChats.Remove(newUserChat);
+                Messages.RemoveRange(messages);
 
-                    db.Remove(chat);
+                db.Remove(chat);
+                db.SaveChanges();
+            }
+        }
 
-                    db.SaveChanges();
-                }
+        public void RenameChat(Chat chat, string newChatName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                Chat chatChanged = db.Chats.Where(c => c.Name == chat.Name).FirstOrDefault();
+                List<Message> messages = db.Messages.Where(c => c.ChatName == chat.Name).ToList();
+
+                chatChanged.Name = newChatName;
+                for (int i = 0; i < messages.Count; i++)
+                    messages[i].ChatName = newChatName;
+
+                db.SaveChanges();
             }
         }
         #endregion
@@ -222,6 +235,35 @@ namespace WebApi.Models
                 db.SaveChanges();
             }
         }
+
+        public void ChangeModerator(User user, bool isModerator)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User userChanged = db.Users.Where(u => u.Name == user.Name).FirstOrDefault();
+
+                if (isModerator)
+                    userChanged.Role = "moderator";
+                else
+                    userChanged.Role = "user";
+
+                db.SaveChanges();
+            }
+        }
+
+        public void BanUser(User user, double time)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User userBanned = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == user.Name);
+                List<UserChat> userChats = userBanned.UserChats.Where(uc => uc.UserId == userBanned.Id).ToList();
+
+                for (int i = 0; i < userChats.Count; i++)
+                    userChats[i].BanEndDate = DateTime.Now.AddMinutes(time);
+
+                db.SaveChanges();
+            }
+        }
         #endregion
 
         #region Boolean-methods
@@ -264,21 +306,38 @@ namespace WebApi.Models
             }
         }
 
-        public bool HasRightToChat(string chatName, string userName)
+        public bool HasLowRightInChat(string chatName, string userName)
         {
             using (ChatAppContext db = new ChatAppContext())
             {
                 User user = db.Users.Where(u => u.Name == userName).FirstOrDefault();
                 Chat chat = db.Chats.Where(u => u.Name == chatName).FirstOrDefault();
 
-                if (chat.Creator == user.Name || user.Role == "administrator" || user.Name == "moderator")
+                if (chat == null && (user.Role == "administrator" || user.Role == "moderator"))
+                    return true;
+                else if (chat.Creator == user.Name)
                     return true;
 
                 return false;
             }
         }
 
-        public bool IsUserHasRight(string userName, string userPassword)
+        public bool HasHighRightInChat(string chatName, string userName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User user = db.Users.Where(u => u.Name == userName).FirstOrDefault();
+                Chat chat = db.Chats.Where(u => u.Name == chatName).FirstOrDefault();
+
+                if (chat.Creator == user.Name  || user.Role == "administrator")
+                    return true;
+
+                return false;
+            }
+        }
+
+
+        public bool IsTrueUser(string userName, string userPassword)
         {
             using (ChatAppContext db = new ChatAppContext())
             {

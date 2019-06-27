@@ -29,8 +29,14 @@ namespace WebApi.Controllers
         {
             ChatContext.Delete(chatName, userName);
         }
+
+        [HttpPut("renameChat/{newChatName}")]
+        public void RenameChat([FromBody] Chat chat, string newChatName)
+        {
+            ChatContext.RenameChat(chat, newChatName);
+        }
         #endregion
-        
+
         #region Message-actions
         [Route("message")]
         [HttpPost]
@@ -51,6 +57,18 @@ namespace WebApi.Controllers
         public void RenameUser([FromBody] User user, string newUserName)
         {
             ChatContext.RenameUser(user, newUserName);
+        }
+
+        [HttpPut("changeModerator/{isModerator}")]
+        public void ChangeModerator([FromBody] User user, bool isModerator)
+        {
+            ChatContext.ChangeModerator(user, isModerator);
+        }
+
+        [HttpPut("banUser/{time}")]
+        public void BanUserToChat([FromBody] User user, double time)
+        {
+            ChatContext.BanUser(user, time);
         }
 
         [HttpGet("users/{Name}")]
@@ -88,16 +106,22 @@ namespace WebApi.Controllers
             return ChatContext.IsUserBanned(chatName, userName);
         }
 
-        [HttpGet("hasRightToChat/{chatName}/{userName}")]
-        public ActionResult<bool> HasRightToChat(string chatName, string userName)
+        [HttpGet("hasLowRightInChat/{chatName}/{userName}")]
+        public ActionResult<bool> HasLowRightInChat(string chatName, string userName)
         {
-            return ChatContext.HasRightToChat(chatName, userName);
+            return ChatContext.HasLowRightInChat(chatName, userName);
         }
 
-        [HttpGet("isUserHasRight/{userName}/{userPassword}")]
-        public ActionResult<bool> IsUserHasRight(string userName, string userPassword)
+        [HttpGet("hasHighRightInChat/{chatName}/{userName}")]
+        public ActionResult<bool> HasHighRightInChat(string chatName, string userName)
         {
-            return ChatContext.IsUserHasRight(userName, userPassword);
+            return ChatContext.HasHighRightInChat(chatName, userName);
+        }
+
+        [HttpGet("isTrueUser/{userName}/{userPassword}")]
+        public ActionResult<bool> IsTrueUser(string userName, string userPassword)
+        {
+            return ChatContext.IsTrueUser(userName, userPassword);
         }
 
         [HttpGet("isChatExists/{chatName}")]

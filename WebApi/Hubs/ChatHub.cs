@@ -34,12 +34,23 @@ namespace WebApi.Hubs
             await Clients.All.SendAsync("ChangeUser", oldName, newName);
         }
 
-        public async Task RemoveUserFromChat(string chatName)
+        public async Task UpdateChat(string oldName, string newName)
+        {
+            await Clients.All.SendAsync("ChangeChat", oldName, newName);
+        }
+
+        public async Task RemoveUserFromChat(string chatName, string userName)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatName);
-            await Clients.OthersInGroup(chatName).SendAsync("ChangeUser");
+            await Clients.OthersInGroup(chatName).SendAsync("RemoveUser");
         }
-        
+
+        public async Task RemoveChat(string chatName)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatName);
+            await Clients.Group(chatName).SendAsync("RemoveChat", chatName);
+        }
+
         public async Task BanUserToChat(string chatName, string userName)
         {
             await Clients.All.SendAsync("BanUser", chatName, userName);
