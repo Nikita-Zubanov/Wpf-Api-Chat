@@ -91,7 +91,13 @@ namespace Wpf
 
                 ChatControl.UsersBox[ChatSelected].Items.Clear();
                 foreach (string user in users)
-                    ChatControl.UsersBox[ChatSelected].Items.Add(user);
+                {
+                    string status = await ApiManager.Read($"api/chat/statusUser/{ChatSelected}/{user}");
+                    if (status != string.Empty)
+                        ChatControl.UsersBox[ChatSelected].Items.Add(user + $" [{status}]");
+                    else
+                        ChatControl.UsersBox[ChatSelected].Items.Add(user);
+                }
             }
         }
 
@@ -120,9 +126,9 @@ namespace Wpf
                     -n — назначить пользователя модератором
                     -d — разжаловать пользователя
                 Боты:
-                  •yBot find -k -l { название канала }||{ название видео } - в ответ бот присылает ссылку на ролик
+                  •yBot find { название канала без пробелов } -t { название видео } - в ответ бот присылает ссылку на ролик
                     -v — выводит колличество текущих просмотров
-                    -l — выводит колличество лаqков под видео
+                    -l — выводит колличество лайков под видео
                   •yBot help — список доступных команд для взаимодействи
 
                 Пример:

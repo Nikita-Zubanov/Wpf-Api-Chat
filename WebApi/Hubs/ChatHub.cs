@@ -23,10 +23,10 @@ namespace WebApi.Hubs
             await Clients.All.SendAsync("ReceiveMessage", chatName, userName, message);
         }
 
-        public async Task AddUserToChat(string chatName, string userName)
+        public async Task AddUserToChat(string chatName, string userName, string status)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, chatName);
-            await Clients.OthersInGroup(chatName).SendAsync("ReceiveUser", chatName, userName);
+            await Clients.OthersInGroup(chatName).SendAsync("ReceiveUser", chatName, userName, status);
         }
 
         public async Task UpdateUser(string oldName, string newName)

@@ -82,6 +82,39 @@ namespace Wpf
                 }
         }
 
+        public async void UpdateStatusUserToListBox(string tabName, string userName, string status)
+        {
+            foreach (KeyValuePair<string, TabItem> keyValuePair in TabItems)
+                if (keyValuePair.Key == tabName)
+                {
+                    ItemCollection ic = UsersBox[keyValuePair.Key].Items;
+                    for (int i = 0; i < ic.Count; i++)
+                    {
+                        if (ic[i].ToString() == userName)
+                            switch (status)
+                            {
+                                case "banned":
+                                    ic[i] = userName + $" [{status}]";
+                                    break;
+                                case "administrator":
+                                    ic[i] = userName + $" [{status}]";
+                                    break;
+                                case "moderator":
+                                    ic[i] = userName + $" [{status}]";
+                                    break;
+                                case "creator":
+                                    ic[i] = userName + $" [{status}]";
+                                    break;
+                                default:
+                                    if (ic[i].ToString() == userName + " [banned]")
+                                        ic[i] = userName;
+                                    break;
+                            }
+                    }
+                    break;
+                }
+        }
+
         public void DeleteAllTabItem()
         {
             TabControl.Items.Clear();
@@ -94,9 +127,13 @@ namespace Wpf
 
         public static bool HasUserToUsersBox(string tabName, string userName)
         {
-            for (int i = 0; i < UsersBox[tabName].Items.Count; i++)
-                if (UsersBox[tabName].Items[i].ToString() == userName)
-                    return true;
+            string[] statusWords = { "banned", "creator", "administrator", "moderator" };
+
+            foreach (string statusWord in statusWords)
+                for (int i = 0; i < UsersBox[tabName].Items.Count; i++)
+                    if (UsersBox[tabName].Items[i].ToString() == userName + $" [{statusWord}]" ||
+                        UsersBox[tabName].Items[i].ToString() == userName)
+                        return true;
 
             return false;
         }

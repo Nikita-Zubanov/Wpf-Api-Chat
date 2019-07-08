@@ -11,7 +11,6 @@ namespace Wpf
     class SignalRManager : MainWindow
     {
         public static HubConnection connection;
-        public static MainWindow mainWindow;
         public static TabControl ChatsControl;
 
         public const string urlSignalR = "http://localhost:58269/";
@@ -29,13 +28,20 @@ namespace Wpf
                             ChatControl.ChatBox[chatName].Items.Add(newMessage);
                 });
             });
-            connection.On<string, string>("ReceiveUser", (chatName, userName) =>
+            connection.On<string, string, string>("ReceiveUser", (chatName, userName, status) =>
             {
                 Dispatcher.Invoke(() =>
                 {
                     if (ChatControl.UsersBox.Count != 0)
+                    {
                         if (!ChatControl.HasUserToUsersBox(chatName, userName))
-                            ChatControl.UsersBox[chatName].Items.Add(userName);
+                            ChatControl.UsersBox[chatName].Items.Add(userName + $" [{status}]");
+                        else
+                        {
+                            ChatControl chatWindow = new ChatControl(ChatsControl);
+                            chatWindow.UpdateStatusUserToListBox(chatName, userName, status);
+                        }
+                    }
                 });
             });
             connection.On<string, string>("ChangeUser", (oldName, newName) =>
@@ -90,6 +96,11 @@ namespace Wpf
                         ChatControl chatWindow = new ChatControl(ChatsControl);
                         chatWindow.DeleteTabItem(chatName);
                     }
+                    else
+                    {
+                        ChatControl chatWindow = new ChatControl(ChatsControl);
+                        chatWindow.UpdateStatusUserToListBox(chatName, userName, "banned");
+                    }
                 });
             });
 
@@ -106,9 +117,9 @@ namespace Wpf
             await connection.InvokeAsync("SendMessage", chatName, userName, message);
         }
 
-        public async void AddUserToChat(string chatName, string userName)
+        public async void AddUserToChat(string chatName, string userName, string status)
         {
-            await connection.InvokeAsync("AddUserToChat", chatName, userName);
+            await connection.InvokeAsync("AddUserToChat", chatName, userName, status);
         }
 
         public async void UpdateUser(string oldName, string newName)

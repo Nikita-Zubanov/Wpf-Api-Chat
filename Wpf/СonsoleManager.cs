@@ -44,6 +44,10 @@ namespace Wpf
                     UserAction();
 
                     break;
+                case "ybot":
+                    BotAction();
+
+                    break;
                 default:
                     MessageBox.Show("Неизвестный объект команды.");
                     break;
@@ -101,7 +105,8 @@ namespace Wpf
                     chatWindow.AddTabItem(chatName);
                     mainWindow.UpdateUsersBox();
 
-                    signalRManager.AddUserToChat(chatName, userName);
+                    string status = await ApiManager.Read($"api/chat/statusUser/{chatName}/{userName}");
+                    signalRManager.AddUserToChat(chatName, userName, status);
                 }
                 else
                     MessageBox.Show("Чат с таким названием уже существует.");
@@ -180,7 +185,8 @@ namespace Wpf
                         chatWindow.AddTabItem(chatName);
                         mainWindow.UpdateUsersBox();
 
-                        signalRManager.AddUserToChat(chatName, userName);
+                        string status = await ApiManager.Read($"api/chat/statusUser/{chatName}/{userName}");
+                        signalRManager.AddUserToChat(chatName, userName, status);
                     }
                     else
                         MessageBox.Show("Вы на время забанены в этом чате.");
@@ -223,20 +229,26 @@ namespace Wpf
                 string chatName = Command["objectName"];
                 string userName = User.Name;
 
-                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasLowRightInChat/{chatName}/{userName}"));
-                if (hasRight)
+                bool isChatExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isChatExists/{chatName}"));
+                if (isChatExists)
                 {
-                    MainWindow mainWindow = new MainWindow();
-                    SignalRManager signalRManager = new SignalRManager();
-                    double time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
-                    string userBannedName = Command["valueSpecialCommand"];
-                    
-                    await ApiManager.Change($"api/chat/banUserToChat/{time}", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userBannedName}'}} }}");
+                    bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasLowRightInChat/{chatName}/{userName}"));
+                    if (hasRight)
+                    {
+                        MainWindow mainWindow = new MainWindow();
+                        SignalRManager signalRManager = new SignalRManager();
+                        double time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
+                        string userBannedName = Command["valueSpecialCommand"];
 
-                    signalRManager.BanUserToChat(chatName, userBannedName);
+                        await ApiManager.Change($"api/chat/banUserToChat/{time}", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userBannedName}'}} }}");
+
+                        signalRManager.BanUserToChat(chatName, userBannedName);
+                    }
+                    else
+                        MessageBox.Show("У вас нет прав на это действие.");
                 }
                 else
-                    MessageBox.Show("У вас нет прав на это действие.");
+                    MessageBox.Show("Комнаты с предложенным названием не существует.");
             }
             else
                 MessageBox.Show("Некорректное(-ая) имя/команда или отсутствует подключение к чату.");
@@ -332,7 +344,6 @@ namespace Wpf
             if ((Command["specialCommand"] == "-n" || Command["specialCommand"] == "-d") &&
                Command["objectName"] != string.Empty)
             {
-                SignalRManager signalRManager = new SignalRManager();
                 string moderatorName = Command["objectName"];
                 if (moderatorName != User.Name)
                 {
@@ -352,20 +363,122 @@ namespace Wpf
                 MessageBox.Show("Некорректное(-ая) имя/команда.");
         }
 
+        private void BotAction()
+        {
+            switch (Command["action"])
+            {
+                case "find":
+                    Find();
+
+                    break;
+                default:
+                    MessageBox.Show("Некорректная команда.");
+                    break;
+            }
+        }
+        private async void Find()
+        {
+            if (Command["specialCommand"] == "-t" &&
+                Command["valueSpecialCommand"] != string.Empty &&
+                Command["objectName"] != string.Empty &&
+                ChatSelected != null)
+            {
+                try
+                {
+                    SignalRManager signalRManager = new SignalRManager();
+                    YouTubeManager youTubeManager = new YouTubeManager();
+
+                    string channelName = Command["objectName"];
+                    string videoName = Command["valueSpecialCommand"];
+
+                    await youTubeManager.SetIdAndUrlVideo(videoName, channelName);
+
+                    signalRManager.SendMessage(ChatSelected, "yBot", youTubeManager.Url);
+                    ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"yBot\",\"Text\":\"{youTubeManager.Url}\"}}");
+
+                    if (Command["secondSpecialCommand"] == "-v")
+                    {
+                        youTubeManager.SetVideoInfo();
+                        string viewsMessageLine = "Просмотров: " + youTubeManager.ViewCount.ToString();
+
+                        signalRManager.SendMessage(ChatSelected, "yBot", viewsMessageLine);
+                        ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"yBot\",\"Text\":\"{viewsMessageLine}\"}}");
+                    }
+                    else if (Command["secondSpecialCommand"] == "-l")
+                    {
+                        youTubeManager.SetVideoInfo();
+                        string likesMessageLine = "Лайков: " + youTubeManager.LikeCount.ToString();
+
+                        signalRManager.SendMessage(ChatSelected, "yBot", likesMessageLine);
+                        ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{ChatSelected}\",\"Author\":\"yBot\",\"Text\":\"{likesMessageLine}\"}}");
+                    }
+                }
+                catch
+                {
+                    MessageBox.Show("Видео не найдено.");
+                }
+            }
+            else
+                MessageBox.Show("Некорректная команда.");
+        }
+
+        #region WriteConsoleLineToCommandDictionary-methods
         private void WriteConsoleLineToCommand()
         {
             try
             {
-                string command = ConsoleLine;
-                string[] words = Regex.Split(command, " ");
+                string[] specialCommands = {
+                    "-c",
+                    "-l",
+                    "-m",
+                    "-n",
+                    "-d",
+                    "-t",
+                    "-v",
+                };
+                
+                string[] words = Regex.Split(ConsoleLine, " ");
+                int countCommand = 0;
 
                 for (int i = 0; i < words.Length; i++)
-                    Command[Command.ElementAt(i).Key] = words[i].ToLower();
+                {
+                    string currentCommand = specialCommands.Where(w => w == words[i]).FirstOrDefault();
+                    if (currentCommand != null)
+                    {
+                        AddCommand(ref countCommand, words[i].ToLower());
+                        i++;
+                        AddValuesToSpecialCommand(ref countCommand, ref i, words);
+                    }
+                    else
+                        AddCommand(ref countCommand, words[i].ToLower());
+                }
             }
             catch
             {
                 MessageBox.Show("Проверьте набранную команду.");
             }
         }
+        private void AddValuesToSpecialCommand(ref int countCommand, ref int i, string[] words)
+        {
+            for (int j = i; j < words.Length; j++)
+            {
+                if (!words[j].Contains("-"))
+                    Command[Command.ElementAt(countCommand).Key] += words[j];
+                else
+                    break;
+
+                if (j + 1 < words.Length && !words[j + 1].Contains("-"))
+                    Command[Command.ElementAt(countCommand).Key] += " ";
+
+                i = j;
+            }
+            countCommand++;
+        }
+        private void AddCommand(ref int countCommand, string word)
+        {
+            Command[Command.ElementAt(countCommand).Key] = word;
+            countCommand++;
+        }
+        #endregion
     }
 }

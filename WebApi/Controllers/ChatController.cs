@@ -76,6 +76,12 @@ namespace WebApi.Controllers
         {
             return ChatContext.GetUsers(name);
         }
+
+        [HttpGet("statusUser/{chatName}/{userName}")]
+        public ActionResult<string> GetStatusUser(string chatName, string userName)
+        {
+            return ChatContext.GetStatusUser(chatName, userName);
+        }
         #endregion
 
         #region UserChat-actions

@@ -196,25 +196,6 @@ namespace WebApi.Models
                 return messages;
             }
         }
-
-        public List<User> GetUsers(string chatName)
-        {
-            using (ChatAppContext db = new ChatAppContext())
-            {
-                List<User> users = new List<User>();
-                Chat chat = db.Chats.Include(u => u.UserChats).FirstOrDefault(c => c.Name == chatName);
-                List<UserChat> userChats = chat.UserChats.Where(c => c.Chat.Name == chatName).ToList();
-
-                if (userChats.Count != 0)
-                    foreach (UserChat userChat in userChats)
-                    {
-                        User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Id == userChat.UserId);
-                        users.Add(new User { Name = user.Name, Role = user.Role, Status = user.Status });
-                    }
-
-                return users;
-            }
-        }
         #endregion
 
         #region User-methods
@@ -262,6 +243,44 @@ namespace WebApi.Models
                     userChats[i].BanEndDate = DateTime.Now.AddMinutes(time);
 
                 db.SaveChanges();
+            }
+        }
+
+        public List<User> GetUsers(string chatName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                List<User> users = new List<User>();
+                Chat chat = db.Chats.Include(u => u.UserChats).FirstOrDefault(c => c.Name == chatName);
+                List<UserChat> userChats = chat.UserChats.Where(c => c.Chat.Name == chatName).ToList();
+
+                if (userChats.Count != 0)
+                    foreach (UserChat userChat in userChats)
+                    {
+                        User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Id == userChat.UserId);
+                        users.Add(new User { Name = user.Name, Role = user.Role, Status = user.Status });
+                    }
+
+                return users;
+            }
+        }
+
+        public string GetStatusUser(string chatName, string userName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                User user = db.Users.Include(u => u.UserChats).FirstOrDefault(u => u.Name == userName);
+                Chat chat = db.Chats.Include(c => c.UserChats).FirstOrDefault(c => c.Name == chatName);
+                UserChat userChats = chat.UserChats.Where(c => c.Chat.Name == chatName && c.User.Name == userName).FirstOrDefault();
+
+                if (userChats.BanEndDate > DateTime.Now)
+                    return "banned";
+                if (chat.Creator == userName)
+                    return "creator";
+                if (user.Role != "user")
+                    return user.Role;
+
+                return "";
             }
         }
         #endregion
@@ -313,9 +332,9 @@ namespace WebApi.Models
                 User user = db.Users.Where(u => u.Name == userName).FirstOrDefault();
                 Chat chat = db.Chats.Where(u => u.Name == chatName).FirstOrDefault();
 
-                if (chat == null && (user.Role == "administrator" || user.Role == "moderator"))
+                if (user.Role == "administrator" || user.Role == "moderator")
                     return true;
-                else if (chat.Creator == user.Name)
+                else if (chat != null && chat.Creator == user.Name)
                     return true;
 
                 return false;

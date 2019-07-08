@@ -5,6 +5,7 @@ namespace Wpf
 {
     public partial class AuthorizationWindow : Window
     {
+
         public AuthorizationWindow()
         {
             InitializeComponent();
@@ -46,23 +47,39 @@ namespace Wpf
 
             if (User.Name != string.Empty && User.Password != string.Empty)
             {
-                bool isUserExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserExists/{User.Name}"));
-                if (!isUserExists)
+                if (IsAllowedName())
                 {
-                    MainWindow mainWindow = new MainWindow();
-                    SignalRManager signalRManager = new SignalRManager();
+                    bool isUserExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserExists/{User.Name}"));
+                    if (!isUserExists)
+                    {
+                        MainWindow mainWindow = new MainWindow();
+                        SignalRManager signalRManager = new SignalRManager();
 
-                    ApiManager.Create("api/authorization/register", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
-                    signalRManager.OnConnect();
+                        ApiManager.Create("api/authorization/register", $"{{'Name':'{User.Name}', 'Password':'{User.Password}'}}");
+                        signalRManager.OnConnect();
 
-                    Close();
-                    mainWindow.ShowDialog();
+                        Close();
+                        mainWindow.ShowDialog();
+                    }
+                    else
+                        MessageBox.Show("Пользователь с таким логином уже существует.");
                 }
                 else
-                    MessageBox.Show("Пользователь с таким логином уже существует.");
+                    MessageBox.Show("Предложенный логин запрещен.");
             }
             else
                 MessageBox.Show("Заполните все поля!");
+        }
+
+        private bool IsAllowedName()
+        {
+            string[] statusWords = { "banned", "creator", "administrator", "moderator" };
+
+            foreach (string statusWord in statusWords)
+                if (User.Name.Contains(statusWord))
+                    return false;
+
+            return true;
         }
     }
 }
