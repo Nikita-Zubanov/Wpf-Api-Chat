@@ -23,20 +23,25 @@ namespace WebApi.Hubs
             await Clients.All.SendAsync("ReceiveMessage", chatName, userName, message);
         }
 
-        public async Task AddUserToChat(string chatName, string userName, string status)
+        public async Task AddUserToChat(string chatName, string userName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, chatName);
-            await Clients.OthersInGroup(chatName).SendAsync("ReceiveUser", chatName, userName, status);
+            await Clients.OthersInGroup(chatName).SendAsync("ReceiveUser", chatName, userName);
         }
 
-        public async Task UpdateUser(string oldName, string newName)
+        public async Task RenameUser(string oldName, string newName)
         {
-            await Clients.All.SendAsync("ChangeUser", oldName, newName);
+            await Clients.All.SendAsync("RenameUser", oldName, newName);
         }
 
-        public async Task UpdateChat(string oldName, string newName)
+        public async Task ChangeRoleUser()
         {
-            await Clients.All.SendAsync("ChangeChat", oldName, newName);
+            await Clients.All.SendAsync("ChangeRoleUser");
+        }
+
+        public async Task RenameChat(string oldName, string newName)
+        {
+            await Clients.All.SendAsync("RenameChat", oldName, newName);
         }
 
         public async Task RemoveUserFromChat(string chatName, string userName)

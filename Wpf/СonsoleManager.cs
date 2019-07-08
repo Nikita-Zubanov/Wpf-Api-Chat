@@ -104,9 +104,8 @@ namespace Wpf
 
                     chatWindow.AddTabItem(chatName);
                     mainWindow.UpdateUsersBox();
-
-                    string status = await ApiManager.Read($"api/chat/statusUser/{chatName}/{userName}");
-                    signalRManager.AddUserToChat(chatName, userName, status);
+                    
+                    signalRManager.AddUserToChat(chatName, userName);
                 }
                 else
                     MessageBox.Show("Чат с таким названием уже существует.");
@@ -154,7 +153,7 @@ namespace Wpf
                     {
                         await ApiManager.Change($"api/chat/renameChat/{newChatName}", $"{{ 'Name':'{chatName}' }}");
 
-                        signalRManager.UpdateChat(chatName, newChatName);
+                        signalRManager.RenameChat(chatName, newChatName);
                     }
                     else
                         MessageBox.Show("У вас нет прав на это действие.");
@@ -184,9 +183,8 @@ namespace Wpf
 
                         chatWindow.AddTabItem(chatName);
                         mainWindow.UpdateUsersBox();
-
-                        string status = await ApiManager.Read($"api/chat/statusUser/{chatName}/{userName}");
-                        signalRManager.AddUserToChat(chatName, userName, status);
+                        
+                        signalRManager.AddUserToChat(chatName, userName);
                     }
                     else
                         MessageBox.Show("Вы на время забанены в этом чате.");
@@ -229,26 +227,20 @@ namespace Wpf
                 string chatName = Command["objectName"];
                 string userName = User.Name;
 
-                bool isChatExists = Convert.ToBoolean(await ApiManager.Read($"api/chat/isChatExists/{chatName}"));
-                if (isChatExists)
+                bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasLowRightInChat/{chatName}/{userName}"));
+                if (hasRight)
                 {
-                    bool hasRight = Convert.ToBoolean(await ApiManager.Read($"api/chat/hasLowRightInChat/{chatName}/{userName}"));
-                    if (hasRight)
-                    {
-                        MainWindow mainWindow = new MainWindow();
-                        SignalRManager signalRManager = new SignalRManager();
-                        double time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
-                        string userBannedName = Command["valueSpecialCommand"];
+                    MainWindow mainWindow = new MainWindow();
+                    SignalRManager signalRManager = new SignalRManager();
+                    double time = Convert.ToDouble(Command["secondValueSpecialCommand"]);
+                    string userBannedName = Command["valueSpecialCommand"];
+                    
+                    await ApiManager.Change($"api/chat/banUserToChat/{time}", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userBannedName}'}} }}");
 
-                        await ApiManager.Change($"api/chat/banUserToChat/{time}", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userBannedName}'}} }}");
-
-                        signalRManager.BanUserToChat(chatName, userBannedName);
-                    }
-                    else
-                        MessageBox.Show("У вас нет прав на это действие.");
+                    signalRManager.BanUserToChat(chatName, userBannedName);
                 }
                 else
-                    MessageBox.Show("Комнаты с предложенным названием не существует.");
+                    MessageBox.Show("У вас нет прав на это действие.");
             }
             else
                 MessageBox.Show("Некорректное(-ая) имя/команда или отсутствует подключение к чату.");
@@ -304,7 +296,7 @@ namespace Wpf
                     {
                         await ApiManager.Change($"api/chat/renameUser/{newUserName}", $"{{ 'Name':'{userName}' }}");
 
-                        signalRManager.UpdateUser(userName, newUserName);
+                        signalRManager.RenameUser(userName, newUserName);
                     }
                     else
                         MessageBox.Show("У вас нет прав на это действие.");
@@ -347,6 +339,7 @@ namespace Wpf
                 string moderatorName = Command["objectName"];
                 if (moderatorName != User.Name)
                 {
+                    SignalRManager signalRManager = new SignalRManager();
                     bool isModerator = false;
 
                     if (Command["specialCommand"] == "-n")
@@ -355,6 +348,8 @@ namespace Wpf
                         isModerator = false;
 
                     await ApiManager.Change($"api/chat/changeModerator/{isModerator}", $"{{ 'Name':'{moderatorName}'}} ");
+
+                    signalRManager.ChangeRoleUser();
                 }
                 else
                     MessageBox.Show("Нельзя самостоятельно назначать себя модератором.");

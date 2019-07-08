@@ -73,7 +73,7 @@ namespace Wpf
 
         private bool IsAllowedName()
         {
-            string[] statusWords = { "banned", "creator", "administrator", "moderator" };
+            string[] statusWords = { "banned", "user", "creator", "administrator", "moderator" };
 
             foreach (string statusWord in statusWords)
                 if (User.Name.Contains(statusWord))

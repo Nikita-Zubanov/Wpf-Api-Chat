@@ -25,7 +25,7 @@ namespace Wpf
                 SignalRManager.ChatsControl = ChatsControl;
             }
         }
-        
+
         public static string ChatSelected;
         private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -49,7 +49,7 @@ namespace Wpf
 
             ChatControl.TextBox[chatName].Clear();
         }
-        
+
         private async void Window_Closed(object sender, EventArgs e)
         {
             AuthorizationWindow authorizationWindow = new AuthorizationWindow();
@@ -66,7 +66,7 @@ namespace Wpf
         {
             Close();
         }
-        
+
         private void ConsoleBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -91,13 +91,7 @@ namespace Wpf
 
                 ChatControl.UsersBox[ChatSelected].Items.Clear();
                 foreach (string user in users)
-                {
-                    string status = await ApiManager.Read($"api/chat/statusUser/{ChatSelected}/{user}");
-                    if (status != string.Empty)
-                        ChatControl.UsersBox[ChatSelected].Items.Add(user + $" [{status}]");
-                    else
-                        ChatControl.UsersBox[ChatSelected].Items.Add(user);
-                }
+                    ChatControl.CreateListBoxItem(ChatSelected, user);
             }
         }
 
@@ -134,9 +128,16 @@ namespace Wpf
                 Пример:
                   room disconnect newroom -l userlogin -m 60
             ";
+
+            if (ChatSelected != null && ChatControl.ChatBox.Count != 0)
+                ChatControl.UsersBox[ChatSelected].ToolTip = @"Создатель комнаты — зеленый
+Администратор — золотой
+Модератор — оранжевый
+Пользователь — черный
+Забаненный пользователь — красный";
         }
         #endregion
-        
+
         #region Methods converting Json to list string
         private List<string> GetListValuesFromJson(string json, string attribute)
         {

@@ -273,14 +273,12 @@ namespace WebApi.Models
                 Chat chat = db.Chats.Include(c => c.UserChats).FirstOrDefault(c => c.Name == chatName);
                 UserChat userChats = chat.UserChats.Where(c => c.Chat.Name == chatName && c.User.Name == userName).FirstOrDefault();
 
-                if (userChats.BanEndDate > DateTime.Now)
-                    return "banned";
+                //if (userChats.BanEndDate > DateTime.Now)
+                //    return "banned";
                 if (chat.Creator == userName)
                     return "creator";
-                if (user.Role != "user")
-                    return user.Role;
 
-                return "";
+                return user.Role;
             }
         }
         #endregion

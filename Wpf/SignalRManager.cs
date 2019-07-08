@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Wpf
 {
@@ -28,23 +29,18 @@ namespace Wpf
                             ChatControl.ChatBox[chatName].Items.Add(newMessage);
                 });
             });
-            connection.On<string, string, string>("ReceiveUser", (chatName, userName, status) =>
+            connection.On<string, string>("ReceiveUser", (chatName, userName) =>
             {
                 Dispatcher.Invoke(() =>
                 {
                     if (ChatControl.UsersBox.Count != 0)
-                    {
                         if (!ChatControl.HasUserToUsersBox(chatName, userName))
-                            ChatControl.UsersBox[chatName].Items.Add(userName + $" [{status}]");
+                            ChatControl.CreateListBoxItem(chatName, userName);
                         else
-                        {
-                            ChatControl chatWindow = new ChatControl(ChatsControl);
-                            chatWindow.UpdateStatusUserToListBox(chatName, userName, status);
-                        }
-                    }
+                            ChatControl.UpdateListBoxItem(chatName, userName);
                 });
             });
-            connection.On<string, string>("ChangeUser", (oldName, newName) =>
+            connection.On<string, string>("RenameUser", (oldName, newName) =>
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -54,7 +50,14 @@ namespace Wpf
                     UpdateUsersBox();
                 });
             });
-            connection.On<string, string>("ChangeChat", (oldName, newName) =>
+            connection.On("ChangeRoleUser", () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateUsersBox();
+                });
+            });
+            connection.On<string, string>("RenameChat", (oldName, newName) =>
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -97,10 +100,7 @@ namespace Wpf
                         chatWindow.DeleteTabItem(chatName);
                     }
                     else
-                    {
-                        ChatControl chatWindow = new ChatControl(ChatsControl);
-                        chatWindow.UpdateStatusUserToListBox(chatName, userName, "banned");
-                    }
+                        ChatControl.UpdateListBoxItem(chatName, userName);
                 });
             });
 
@@ -117,19 +117,24 @@ namespace Wpf
             await connection.InvokeAsync("SendMessage", chatName, userName, message);
         }
 
-        public async void AddUserToChat(string chatName, string userName, string status)
+        public async void AddUserToChat(string chatName, string userName)
         {
-            await connection.InvokeAsync("AddUserToChat", chatName, userName, status);
+            await connection.InvokeAsync("AddUserToChat", chatName, userName);
         }
 
-        public async void UpdateUser(string oldName, string newName)
+        public async void RenameUser(string oldName, string newName)
         {
-            await connection.InvokeAsync("UpdateUser", oldName, newName);
+            await connection.InvokeAsync("RenameUser", oldName, newName);
         }
 
-        public async void UpdateChat(string oldName, string newName)
+        public async void ChangeRoleUser()
         {
-            await connection.InvokeAsync("UpdateChat", oldName, newName);
+            await connection.InvokeAsync("ChangeRoleUser");
+        }
+
+        public async void RenameChat(string oldName, string newName)
+        {
+            await connection.InvokeAsync("RenameChat", oldName, newName);
         }
 
         public async void RemoveUserFromChat(string chatName, string userName)
