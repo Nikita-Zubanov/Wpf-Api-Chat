@@ -35,6 +35,12 @@ namespace WebApi.Controllers
         {
             ChatContext.RenameChat(chat, newChatName);
         }
+
+        [HttpGet("chats/{userName}")]
+        public ActionResult<IEnumerable<Chat>> GetChats(string userName)
+        {
+            return ChatContext.GetChats(userName);
+        }
         #endregion
 
         #region Message-actions

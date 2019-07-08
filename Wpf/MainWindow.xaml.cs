@@ -23,14 +23,40 @@ namespace Wpf
                     .WithUrl(SignalRManager.urlSignalR + SignalRManager.uriSignalR)
                     .Build();
                 SignalRManager.ChatsControl = ChatsControl;
+
+
+                LoadAllTabItems();
             }
         }
 
-        public static string ChatSelected;
-        private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void LoadAllTabItems()
         {
-            if (ChatsControl.SelectedItem != null)
-                ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
+            ChatControl chatControl = new ChatControl(ChatsControl);
+            List<string> chatsName = new List<string>();
+
+            string chatsJson = await ApiManager.Read($"api/chat/chats/{User.Name}");
+            chatsName = GetListValuesFromJson(chatsJson, "name");
+
+            foreach (string chatName in chatsName)
+            {
+                chatControl.AddTabItem(chatName);
+                await UpdateUsersBox();
+            }
+        }
+
+        public async Task UpdateUsersBox()
+        {
+            if (ChatSelected != null)
+            {
+                List<string> users = new List<string>();
+
+                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
+                users = GetListValuesFromJson(usersJson, "name");
+
+                ChatControl.UsersBox[ChatSelected].Items.Clear();
+                foreach (string user in users)
+                    ChatControl.CreateListBoxItem(ChatSelected, user);
+            }
         }
 
         public static void MessageButton_Click(object sender, EventArgs e)
@@ -48,6 +74,13 @@ namespace Wpf
             }
 
             ChatControl.TextBox[chatName].Clear();
+        }
+
+        public static string ChatSelected;
+        private void ChatsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ChatsControl.SelectedItem != null)
+                ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
         }
 
         private async void Window_Closed(object sender, EventArgs e)
@@ -79,22 +112,7 @@ namespace Wpf
                 ConsoleBox.Clear();
             }
         }
-
-        public async void UpdateUsersBox()
-        {
-            if (ChatSelected != null)
-            {
-                List<string> users = new List<string>();
-
-                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
-                users = GetListValuesFromJson(usersJson, "name");
-
-                ChatControl.UsersBox[ChatSelected].Items.Clear();
-                foreach (string user in users)
-                    ChatControl.CreateListBoxItem(ChatSelected, user);
-            }
-        }
-
+        
         #region ToolTip info
         private void ConsoleExpander_MouseMove(object sender, MouseEventArgs e)
         {

@@ -90,7 +90,7 @@ namespace Wpf
         {
             if (Command["objectName"] != string.Empty)
             {
-                ChatControl chatWindow = new ChatControl(ChatsControl);
+                ChatControl chatControl = new ChatControl(ChatsControl);
                 MainWindow mainWindow = new MainWindow();
                 SignalRManager signalRManager = new SignalRManager();
                 string chatName = Command["objectName"];
@@ -102,7 +102,7 @@ namespace Wpf
                     await ApiManager.Create("api/chat/create", $"{{'Name':'{chatName}', 'Creator':'{userName}'}}");
                     await ApiManager.Create("api/chat/user", $"{{ 'Chat':{{'Name':'{chatName}'}}, 'User':{{'Name':'{userName}'}} }}");
 
-                    chatWindow.AddTabItem(chatName);
+                    chatControl.AddTabItem(chatName);
                     mainWindow.UpdateUsersBox();
                     
                     signalRManager.AddUserToChat(chatName, userName);

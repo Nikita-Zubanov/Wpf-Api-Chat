@@ -122,6 +122,25 @@ namespace WebApi.Models
                 db.SaveChanges();
             }
         }
+
+        public List<Chat> GetChats(string userName)
+        {
+            using (ChatAppContext db = new ChatAppContext())
+            {
+                List<Chat> chats = db.Chats.ToList();
+                User user = db.Users.Include(s => s.UserChats).FirstOrDefault(s => s.Name == userName);
+                List<Chat> userChats = new List<Chat>();
+
+                foreach(Chat chat in chats)
+                {
+                    UserChat userChat = user.UserChats.Where(uc => uc.ChatId == chat.Id && uc.UserId == user.Id).FirstOrDefault();
+                    if (userChat != null)
+                        userChats.Add(new Chat { Name = chat.Name });
+                }
+
+                return userChats;
+            }
+        }
         #endregion
 
         #region UserChat and Message methods
@@ -272,9 +291,7 @@ namespace WebApi.Models
                 User user = db.Users.Include(u => u.UserChats).FirstOrDefault(u => u.Name == userName);
                 Chat chat = db.Chats.Include(c => c.UserChats).FirstOrDefault(c => c.Name == chatName);
                 UserChat userChats = chat.UserChats.Where(c => c.Chat.Name == chatName && c.User.Name == userName).FirstOrDefault();
-
-                //if (userChats.BanEndDate > DateTime.Now)
-                //    return "banned";
+                
                 if (chat.Creator == userName)
                     return "creator";
 
