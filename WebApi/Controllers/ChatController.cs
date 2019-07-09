@@ -36,7 +36,7 @@ namespace WebApi.Controllers
             ChatContext.RenameChat(chat, newChatName);
         }
 
-        [HttpGet("chats/{userName}")]
+        [HttpGet("getChats/{userName}")]
         public ActionResult<IEnumerable<Chat>> GetChats(string userName)
         {
             return ChatContext.GetChats(userName);
@@ -77,7 +77,7 @@ namespace WebApi.Controllers
             ChatContext.BanUser(user, time);
         }
 
-        [HttpGet("users/{Name}")]
+        [HttpGet("getUsers/{Name}")]
         public ActionResult<IEnumerable<User>> GetUsers(string name)
         {
             return ChatContext.GetUsers(name);

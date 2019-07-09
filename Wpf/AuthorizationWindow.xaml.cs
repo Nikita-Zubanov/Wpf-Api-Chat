@@ -18,7 +18,7 @@ namespace Wpf
 
             if (User.Name != string.Empty && User.Password != string.Empty)
             {
-                bool isRegistred = Convert.ToBoolean(await ApiManager.Read($"api/authorization/{User.Name}/{User.Password}"));
+                bool isRegistred = Convert.ToBoolean(await ApiManager.Read($"api/authorization/isRegistred/{User.Name}/{User.Password}"));
                 if (isRegistred)
                 {
                     MainWindow mainWindow = new MainWindow();
@@ -73,7 +73,7 @@ namespace Wpf
 
         private bool IsAllowedName()
         {
-            string[] statusWords = { "banned", "user", "creator", "administrator", "moderator" };
+            string[] statusWords = { User.banned, User.user, User.creator, User.administrator, User.moderator };
 
             foreach (string statusWord in statusWords)
                 if (User.Name.Contains(statusWord))

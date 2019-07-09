@@ -8,8 +8,8 @@ namespace Wpf
 {
     class ChatControl
     {
-        private TabControl TabControl;
-        private static Dictionary<string, TabItem> TabItems = new Dictionary<string, TabItem>();
+        private TabControl ChatsControl;
+        private static Dictionary<string, TabItem> ChatsItems = new Dictionary<string, TabItem>();
 
         public static Dictionary<string, Button> MessageButton = new Dictionary<string, Button>();
         public static Dictionary<string, ListBox> ChatBox = new Dictionary<string, ListBox>();
@@ -18,12 +18,12 @@ namespace Wpf
 
         public ChatControl(TabControl chatControl)
         {
-            TabControl = chatControl;
+            ChatsControl = chatControl;
         }
 
         public void AddTabItem(string tabName)
         {
-            if (TabItems.ContainsKey(tabName))
+            if (ChatsItems.ContainsKey(tabName))
             {
                 DeleteTabItem(tabName);
                 CreateTabItem(tabName);
@@ -31,91 +31,93 @@ namespace Wpf
             else
                 CreateTabItem(tabName);
 
-            TabControl.Items.Add(TabItems[tabName]);
-            TabControl.SelectedIndex = TabControl.Items.Count - 1;
+            ChatsControl.Items.Add(ChatsItems[tabName]);
+            ChatsControl.SelectedIndex = ChatsControl.Items.Count - 1;
         }
 
-        private void CreateTabItem(string tabName)
+        private void CreateTabItem(string chatName)
         {
-            ChatBox.Add(tabName, new ListBox
+            ChatBox.Add(chatName, new ListBox
             {
-                Name = tabName,
+                Name = chatName,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Height = 272,
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 617
             });
-            TextBox.Add(tabName, new TextBox
+            TextBox.Add(chatName, new TextBox
             {
-                Name = tabName,
+                Name = chatName,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Height = 50,
                 Margin = new Thickness(0, 277, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
-                Width = 617
+                Width = 617,
+                FontFamily = new FontFamily("Segoe UI Semibold")
             });
-            UsersBox.Add(tabName, new ListBox
+            UsersBox.Add(chatName, new ListBox
             {
-                Name = tabName,
+                Name = chatName,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Height = 272,
                 Margin = new Thickness(622, 0, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 144
             });
-            MessageButton.Add(tabName, new Button
+            UsersBox[chatName].MouseMove += MainWindow.UsersBox_MouseMove;
+            MessageButton.Add(chatName, new Button
             {
-                Name = tabName,
+                Name = chatName,
                 Content = "Отправить",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(622, 277, 0, 0),
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 75
             });
-            MessageButton[tabName].Click += MainWindow.MessageButton_Click;
+            MessageButton[chatName].Click += MainWindow.MessageButton_Click;
 
 
             Grid chatGrid = new Grid();
             chatGrid.Name = "ChatGrid";
             chatGrid.Background = Brushes.WhiteSmoke;
-            chatGrid.Children.Add(ChatBox[tabName]);
-            chatGrid.Children.Add(TextBox[tabName]);
-            chatGrid.Children.Add(UsersBox[tabName]);
-            chatGrid.Children.Add(MessageButton[tabName]);
+            chatGrid.Children.Add(ChatBox[chatName]);
+            chatGrid.Children.Add(TextBox[chatName]);
+            chatGrid.Children.Add(UsersBox[chatName]);
+            chatGrid.Children.Add(MessageButton[chatName]);
 
-            TabItems.Add(tabName,
+            ChatsItems.Add(chatName,
                 new TabItem()
                 {
-                    Name = tabName,
-                    Header = tabName,
+                    Name = chatName,
+                    Header = chatName,
                     Margin = new Thickness(-2, -2, 2, 0),
                     Content = chatGrid
                 });
         }
 
-        public void DeleteTabItem(string tabName)
+        public void DeleteTabItem(string chatName)
         {
-            if (TabItems.ContainsKey(tabName))
+            if (ChatsItems.ContainsKey(chatName))
             {
-                TabControl.Items.Remove(TabItems[tabName]);
-                TabItems.Remove(tabName);
-                MessageButton.Remove(tabName);
-                ChatBox.Remove(tabName);
-                TextBox.Remove(tabName);
-                UsersBox.Remove(tabName);
+                ChatsControl.Items.Remove(ChatsItems[chatName]);
+                ChatsItems.Remove(chatName);
+                MessageButton.Remove(chatName);
+                ChatBox.Remove(chatName);
+                TextBox.Remove(chatName);
+                UsersBox.Remove(chatName);
             }
         }
 
         public void RenameTabItem(string oldName, string newName)
         {
-            foreach (KeyValuePair<string, TabItem> keyValuePair in TabItems)
+            foreach (KeyValuePair<string, TabItem> keyValuePair in ChatsItems)
                 if (keyValuePair.Key == oldName)
                 {
-                    TabItems[keyValuePair.Key].Name = newName;
-                    TabItems[keyValuePair.Key].Header = newName;
-                    TabItem tabItem = TabItems[keyValuePair.Key];
-                    TabItems.Remove(keyValuePair.Key);
-                    TabItems.Add(newName, tabItem);
+                    ChatsItems[keyValuePair.Key].Name = newName;
+                    ChatsItems[keyValuePair.Key].Header = newName;
+                    TabItem tabItem = ChatsItems[keyValuePair.Key];
+                    ChatsItems.Remove(keyValuePair.Key);
+                    ChatsItems.Add(newName, tabItem);
 
                     MessageButton[keyValuePair.Key].Name = newName;
                     Button button = MessageButton[keyValuePair.Key];
@@ -143,82 +145,57 @@ namespace Wpf
 
         public void DeleteAllTabItem()
         {
-            TabControl.Items.Clear();
-            TabItems.Clear();
+            ChatsControl.Items.Clear();
+            ChatsItems.Clear();
             MessageButton.Clear();
             ChatBox.Clear();
             TextBox.Clear();
             UsersBox.Clear();
         }
 
-        public static async void CreateListBoxItem(string tabName, string userName)
+        public static void UpdateListBoxItem(string chatName, string userName)
         {
-            SolidColorBrush userColorText = new SolidColorBrush();
-
-            string status = await ApiManager.Read($"api/chat/statusUser/{tabName}/{userName}");
-            bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{tabName}/{userName}"));
-            switch (status)
-            {
-                case "creator":
-                    userColorText = new SolidColorBrush(Colors.Gray);
-                    break;
-                case "administrator":
-                    userColorText = new SolidColorBrush(Colors.Gold);
-                    break;
-                case "moderator":
-                    userColorText = new SolidColorBrush(Colors.Orange);
-                    break;
-                case "user":
-                    userColorText = new SolidColorBrush(Colors.Black);
-                    break;
-            }
-            if (isBanned)
-                userColorText = new SolidColorBrush(Colors.Red);
-
-            ListBoxItem newListBoxItem = new ListBoxItem {
-                Content = userName,
-                Foreground = userColorText
-            };
-            UsersBox[tabName].Items.Add(newListBoxItem);
-        }
-
-        public static async void UpdateListBoxItem(string tabName, string userName)
-        {
-            SolidColorBrush userColorText = new SolidColorBrush();
-
-            string status = await ApiManager.Read($"api/chat/statusUser/{tabName}/{userName}");
-            bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{tabName}/{userName}"));
-            switch (status)
-            {
-                case "creator":
-                    userColorText = new SolidColorBrush(Colors.Green);
-                    break;
-                case "administrator":
-                    userColorText = new SolidColorBrush(Colors.Gold);
-                    break;
-                case "moderator":
-                    userColorText = new SolidColorBrush(Colors.Orange);
-                    break;
-                case "user":
-                    userColorText = new SolidColorBrush(Colors.Black);
-                    break;
-            }
-            if (isBanned)
-                userColorText = new SolidColorBrush(Colors.Red);
-
-            foreach (ListBoxItem item in UsersBox[tabName].Items)
+            foreach (ListBoxItem item in UsersBox[chatName].Items)
                 if (item.Content.ToString() == userName)
                 {
-                    UsersBox[tabName].Items.Remove(item);
+                    UsersBox[chatName].Items.Remove(item);
                     break;
                 }
+
+            CreateListBoxItem(chatName, userName);
+        }
+
+        public static async void CreateListBoxItem(string chatName, string userName)
+        {
+            SolidColorBrush userColorText = new SolidColorBrush();
+
+            string status = await ApiManager.Read($"api/chat/statusUser/{chatName}/{userName}");
+            bool isBanned = Convert.ToBoolean(await ApiManager.Read($"api/chat/isUserBanned/{chatName}/{userName}"));
+            switch (status)
+            {
+                case User.creator:
+                    userColorText = User.creatorColor;
+                    break;
+                case User.administrator:
+                    userColorText = User.administratorColor;
+                    break;
+                case User.moderator:
+                    userColorText = User.moderatorColor;
+                    break;
+                case User.user:
+                    userColorText = User.userColor;
+                    break;
+            }
+            if (isBanned)
+                userColorText = User.bannedColor;
 
             ListBoxItem newListBoxItem = new ListBoxItem
             {
                 Content = userName,
-                Foreground = userColorText
-            };
-            UsersBox[tabName].Items.Add(newListBoxItem);
+                Foreground = userColorText,
+                FontFamily = new FontFamily("Segoe UI Semibold")
+        };
+            UsersBox[chatName].Items.Add(newListBoxItem);
         }
 
         public static bool HasUserToUsersBox(string tabName, string userName)
@@ -232,7 +209,7 @@ namespace Wpf
 
         public static bool HasTabItemToDictionary(string tabName)
         {
-            if (TabItems.ContainsKey(tabName))
+            if (ChatsItems.ContainsKey(tabName))
                 return true;
 
             return false;

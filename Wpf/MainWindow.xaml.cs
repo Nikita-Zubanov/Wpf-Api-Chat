@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Threading;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Wpf
@@ -24,20 +22,19 @@ namespace Wpf
                     .Build();
                 SignalRManager.ChatsControl = ChatsControl;
 
-
-                LoadAllTabItems();
+                LoadPreviouslyOpenedChatsItems();
             }
         }
 
-        private async void LoadAllTabItems()
+        private async void LoadPreviouslyOpenedChatsItems()
         {
             ChatControl chatControl = new ChatControl(ChatsControl);
-            List<string> chatsName = new List<string>();
+            List<string> chatsNames = new List<string>();
 
-            string chatsJson = await ApiManager.Read($"api/chat/chats/{User.Name}");
-            chatsName = GetListValuesFromJson(chatsJson, "name");
+            string chatsJson = await ApiManager.Read($"api/chat/getChats/{User.Name}");
+            chatsNames = GetListValuesFromJson(chatsJson, "name");
 
-            foreach (string chatName in chatsName)
+            foreach (string chatName in chatsNames)
             {
                 chatControl.AddTabItem(chatName);
                 await UpdateUsersBox();
@@ -48,32 +45,15 @@ namespace Wpf
         {
             if (ChatSelected != null)
             {
-                List<string> users = new List<string>();
+                List<string> usersNames = new List<string>();
 
-                string usersJson = await ApiManager.Read($"api/chat/users/{ChatSelected}");
-                users = GetListValuesFromJson(usersJson, "name");
+                string usersJson = await ApiManager.Read($"api/chat/getUsers/{ChatSelected}");
+                usersNames = GetListValuesFromJson(usersJson, "name");
 
                 ChatControl.UsersBox[ChatSelected].Items.Clear();
-                foreach (string user in users)
+                foreach (string user in usersNames)
                     ChatControl.CreateListBoxItem(ChatSelected, user);
             }
-        }
-
-        public static void MessageButton_Click(object sender, EventArgs e)
-        {
-            MainWindow mainWindow = new MainWindow();
-            SignalRManager signalRManager = new SignalRManager();
-            string chatName = ChatSelected;
-            string userName = User.Name;
-            string message = ChatControl.TextBox[ChatSelected].Text;
-
-            if (message != string.Empty)
-            {
-                signalRManager.SendMessage(chatName, userName, message);
-                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{chatName}\",\"Author\":\"{userName}\",\"Text\":\"{message}\"}}");
-            }
-
-            ChatControl.TextBox[chatName].Clear();
         }
 
         public static string ChatSelected;
@@ -81,6 +61,11 @@ namespace Wpf
         {
             if (ChatsControl.SelectedItem != null)
                 ChatSelected = ((TabItem)ChatsControl.SelectedItem).Name;
+        }
+
+        private void ExitUserItem_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private async void Window_Closed(object sender, EventArgs e)
@@ -95,24 +80,47 @@ namespace Wpf
             authorizationWindow.Show();
         }
 
-        private void ExitUserItem_Click(object sender, RoutedEventArgs e)
+        public static void MessageButton_Click(object sender, EventArgs e)
         {
-            Close();
+            SendMessage();
         }
 
-        private void ConsoleBox_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                string consoleLine = ConsoleBox.Text;
+                if (ConsoleBox.IsSelectionActive)
+                {
+                    string consoleLine = ConsoleBox.Text;
 
-                СonsoleManager console = new СonsoleManager(ChatsControl, consoleLine);
-                console.ExecuteCommand();
+                    СonsoleManager console = new СonsoleManager(ChatsControl, consoleLine);
+                    console.ExecuteCommand();
 
-                ConsoleBox.Clear();
+                    ConsoleBox.Clear();
+                }
+                else if (ChatControl.TextBox[ChatSelected].IsSelectionActive)
+                    SendMessage();
             }
         }
-        
+
+        public static void SendMessage()
+        {
+            MainWindow mainWindow = new MainWindow();
+            SignalRManager signalRManager = new SignalRManager();
+
+            string chatName = ChatSelected;
+            string userName = User.Name;
+            string message = ChatControl.TextBox[ChatSelected].Text;
+
+            if (message != string.Empty)
+            {
+                signalRManager.SendMessage(chatName, userName, message);
+                ApiManager.Create("api/chat/message", $"{{\"ChatName\":\"{chatName}\",\"Author\":\"{userName}\",\"Text\":\"{message}\"}}");
+            }
+
+            ChatControl.TextBox[chatName].Clear();
+        }
+
         #region ToolTip info
         private void ConsoleExpander_MouseMove(object sender, MouseEventArgs e)
         {
@@ -146,9 +154,11 @@ namespace Wpf
                 Пример:
                   room disconnect newroom -l userlogin -m 60
             ";
+        }
 
-            if (ChatSelected != null && ChatControl.ChatBox.Count != 0)
-                ChatControl.UsersBox[ChatSelected].ToolTip = @"Создатель комнаты — зеленый
+        public static void UsersBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            ChatControl.UsersBox[ChatSelected].ToolTip = @"Создатель комнаты — зеленый
 Администратор — золотой
 Модератор — оранжевый
 Пользователь — черный

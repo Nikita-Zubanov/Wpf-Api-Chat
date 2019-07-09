@@ -37,7 +37,7 @@ namespace WebApi.Controllers
             UsersContext.LoginOrLogout(user, "Offline");
         }
         
-        [HttpGet("{Name}/{Password}")]
+        [HttpGet("isRegistred/{Name}/{Password}")]
         public ActionResult<bool> IsRegistred(string name, string password)
         {
             return UsersContext.IsRegistred(name, password);

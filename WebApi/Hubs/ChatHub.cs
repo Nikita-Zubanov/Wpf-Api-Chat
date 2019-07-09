@@ -25,8 +25,7 @@ namespace WebApi.Hubs
 
         public async Task AddUserToChat(string chatName, string userName)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, chatName);
-            await Clients.OthersInGroup(chatName).SendAsync("ReceiveUser", chatName, userName);
+            await Clients.Others.SendAsync("ReceiveUser", chatName, userName);
         }
 
         public async Task RenameUser(string oldName, string newName)
@@ -46,14 +45,12 @@ namespace WebApi.Hubs
 
         public async Task RemoveUserFromChat(string chatName, string userName)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatName);
-            await Clients.OthersInGroup(chatName).SendAsync("RemoveUser");
+            await Clients.Others.SendAsync("RemoveUser");
         }
 
         public async Task RemoveChat(string chatName)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatName);
-            await Clients.Group(chatName).SendAsync("RemoveChat", chatName);
+            await Clients.All.SendAsync("RemoveChat", chatName);
         }
 
         public async Task BanUserToChat(string chatName, string userName)
